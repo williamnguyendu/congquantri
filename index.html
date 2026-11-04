@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản trị Sự kiện - Pride Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .loader {
+            border: 5px solid #f3f3f3; border-top: 5px solid #3498db;
+            border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col font-sans">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-90 z-50 flex flex-col justify-center items-center hidden">
+        <div class="loader mb-4"></div>
+        <p class="text-gray-700 font-semibold text-lg">Đang tải dữ liệu...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+            <h2 class="text-2xl font-bold text-center text-blue-600 mb-6">ĐĂNG NHẬP HỆ THỐNG</h2>
+            <div id="loginError" class="text-red-500 text-sm text-center mb-4 hidden"></div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Tên đăng nhập</label>
+                    <input type="text" id="username" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">Đăng nhập</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="hidden flex-grow flex flex-col">
+        <nav class="bg-white shadow-md p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-blue-600">Admin Dashboard</h1>
+            <div class="flex items-center gap-4">
+                <span id="welcomeText" class="text-gray-600 font-medium"></span>
+                <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition">Đăng xuất</button>
+            </div>
+        </nav>
+
+        <div class="p-4 md:p-8 flex-grow">
+            <!-- Tabs -->
+            <div class="flex flex-wrap border-b border-gray-200 mb-6 gap-2">
+                <button onclick="switchTab('masoi')" class="tab-btn active bg-blue-600 text-white px-4 py-2 rounded-t-lg font-semibold" data-tab="masoi">Làng Ma Sói</button>
+                <button onclick="switchTab('cafe')" class="tab-btn bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-2 rounded-t-lg font-semibold" data-tab="cafe">Pride Cafe</button>
+                <button onclick="switchTab('event')" class="tab-btn bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-2 rounded-t-lg font-semibold" data-tab="event">Pride Event</button>
+                <button onclick="switchTab('talk')" class="tab-btn bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-2 rounded-t-lg font-semibold" data-tab="talk">Pride Talk</button>
+            </div>
+
+            <!-- Content Container -->
+            <div id="contentContainer"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 text-center py-4 text-gray-500 text-sm mt-auto">
+        Hệ thống được xây dựng bởi <a href="https://www.pridehome.vn" target="_blank" class="text-blue-500 hover:underline font-semibold">Pride Home</a>.
+    </footer>
+
+    <!-- Hidden element for PDF rendering -->
+    <div id="pdfPrintArea" class="hidden"></div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbwPMFyTMBOCp1ZPtaoXA42bB7Txa0XgMfRuItnNgxx_NJLtRMeouc9doyXrbZxfFJET/exec"; // THAY THẾ URL WEB APP VÀO ĐÂY
+        let globalData = {};
+
+        document.addEventListener("DOMContentLoaded", () => {
+            checkAuth();
+        });
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+        }
+
+        function checkAuth() {
+            const expire = localStorage.getItem('loginExp');
+            if (expire && Date.now() < parseInt(expire)) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('dashboardScreen').classList.remove('hidden');
+                document.getElementById('welcomeText').innerText = `Xin chào, ${localStorage.getItem('adminName')}`;
+                fetchData();
+            } else {
+                logout(false);
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const passMd5 = CryptoJS.MD5(pass).toString();
+
+            showLoading(true);
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: "login", username: user, password: passMd5 })
+                });
+                const res = await response.json();
+                
+                if (res.success) {
+                    localStorage.setItem('loginExp', Date.now() + 60 * 60 * 1000); // 60 mins
+                    localStorage.setItem('adminName', res.name);
+                    checkAuth();
+                } else {
+                    const err = document.getElementById('loginError');
+                    err.innerText = res.message;
+                    err.classList.remove('hidden');
+                }
+            } catch (error) {
+                alert("Lỗi kết nối đến máy chủ.");
+            }
+            showLoading(false);
+        }
+
+        function logout(refresh = true) {
+            localStorage.removeItem('loginExp');
+            localStorage.removeItem('adminName');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('dashboardScreen').classList.add('hidden');
+            if(refresh) window.location.reload();
+        }
+
+        async function fetchData() {
+            showLoading(true);
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: "getData" })
+                });
+                const res = await response.json();
+                if (res.success) {
+                    globalData = res.data;
+                    switchTab('masoi'); 
+                }
+            } catch (error) {
+                alert("Lỗi tải dữ liệu.");
+            }
+            showLoading(false);
+        }
+
+        function switchTab(tabKey) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'active');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            const activeBtn = document.querySelector(`.tab-btn[data-tab='${tabKey}']`);
+            activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            activeBtn.classList.add('bg-blue-600', 'text-white', 'active');
+
+            renderData(tabKey);
+        }
+
+        function renderData(tabKey) {
+            const container = document.getElementById('contentContainer');
+            container.innerHTML = '';
+            const tabData = globalData[tabKey];
+
+            if (!tabData || Object.keys(tabData).length === 0) {
+                container.innerHTML = '<p class="text-gray-500">Chưa có dữ liệu đăng ký.</p>';
+                return;
+            }
+
+            for (const [eventId, group] of Object.entries(tabData)) {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'bg-white rounded-xl shadow-md p-6 mb-8';
+
+                const headerInfo = `${group.info.date} ${group.info.extra ? '- ' + group.info.extra : ''}`;
+
+                groupDiv.innerHTML = `
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-800"><i class="fa-regular fa-calendar text-blue-500 mr-2"></i> ${headerInfo}</h3>
+                        <div class="flex gap-2 mt-4 md:mt-0 w-full md:w-auto">
+                            <input type="text" placeholder="Tìm tên/số điện thoại..." onkeyup="searchTable(this, 'table-${eventId}')" class="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex-grow md:w-64">
+                            <button onclick="exportPDF('${eventId}', '${tabKey}')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg whitespace-nowrap"><i class="fa-solid fa-file-pdf mr-1"></i> Xuất PDF</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse" id="table-${eventId}">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700 uppercase text-sm">
+                                    <th class="p-3 border-b">Thời gian ĐK</th>
+                                    <th class="p-3 border-b">Họ Tên</th>
+                                    <th class="p-3 border-b">Số Điện Thoại</th>
+                                    <th class="p-3 border-b">Trạng Thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${group.participants.map(p => `
+                                    <tr class="hover:bg-gray-50 search-row">
+                                        <td class="p-3 border-b text-sm">${p.time}</td>
+                                        <td class="p-3 border-b font-medium search-name">${p.name}</td>
+                                        <td class="p-3 border-b search-phone">${p.phone}</td>
+                                        <td class="p-3 border-b text-sm">
+                                            <span class="px-2 py-1 rounded-full text-xs font-semibold ${p.status.toLowerCase().includes('duyệt') || p.status.toLowerCase().includes('thành công') ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${p.status}</span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                container.appendChild(groupDiv);
+            }
+        }
+
+        function searchTable(input, tableId) {
+            const filter = input.value.toLowerCase();
+            const rows = document.getElementById(tableId).getElementsByClassName('search-row');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const name = rows[i].querySelector('.search-name').textContent.toLowerCase();
+                const phone = rows[i].querySelector('.search-phone').textContent.toLowerCase();
+                if (name.includes(filter) || phone.includes(filter)) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+
+        function exportPDF(eventId, tabKey) {
+            const group = globalData[tabKey][eventId];
+            const pdfArea = document.getElementById('pdfPrintArea');
+            
+            let htmlStr = `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h1 style="text-align: center; color: #1a56db; margin-bottom: 5px;">DANH SÁCH CHECK-IN</h1>
+                    <p style="text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 20px;">
+                        Ngày tổ chức: ${group.info.date} <br> ${group.info.extra ? 'Thông tin: ' + group.info.extra : ''}
+                    </p>
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="background-color: #f3f4f6;">
+                                <th style="border: 1px solid #d1d5db; padding: 10px;">STT</th>
+                                <th style="border: 1px solid #d1d5db; padding: 10px;">Họ tên</th>
+                                <th style="border: 1px solid #d1d5db; padding: 10px;">Số điện thoại</th>
+                                <th style="border: 1px solid #d1d5db; padding: 10px; width: 150px;">Ký tên</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            group.participants.forEach((p, idx) => {
+                const phoneStr = p.phone ? String(p.phone).trim() : "";
+                const maskedPhone = phoneStr.length >= 4 ? "***" + phoneStr.slice(-4) : phoneStr;
+                
+                htmlStr += `
+                    <tr>
+                        <td style="border: 1px solid #d1d5db; padding: 10px;">${idx + 1}</td>
+                        <td style="border: 1px solid #d1d5db; padding: 10px;">${p.name}</td>
+                        <td style="border: 1px solid #d1d5db; padding: 10px;">${maskedPhone}</td>
+                        <td style="border: 1px solid #d1d5db; padding: 10px;"></td>
+                    </tr>
+                `;
+            });
+            
+            htmlStr += `</tbody></table></div>`;
+            pdfArea.innerHTML = htmlStr;
+            pdfArea.classList.remove('hidden');
+
+            const opt = {
+                margin:       0.5,
+                filename:     `DanhSach_${eventId}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            showLoading(true);
+            html2pdf().set(opt).from(pdfArea).save().then(() => {
+                pdfArea.classList.add('hidden');
+                pdfArea.innerHTML = '';
+                showLoading(false);
+            });
+        }
+    </script>
+</body>
+</html>
