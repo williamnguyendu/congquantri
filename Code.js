@@ -15,9 +15,8 @@ function doPost(e) {
   }
 }
 
-// Cho phép GET request để giữ Web App không bị lỗi khi test trên trình duyệt
 function doGet(e) {
-  return ContentService.createTextOutput("Hệ thống hoạt động ổn định.").setMimeType(ContentService.MimeType.TEXT);
+  return ContentService.createTextOutput("API Endpoint is running.").setMimeType(ContentService.MimeType.TEXT);
 }
 
 function checkLogin(username, passwordMd5) {
@@ -25,21 +24,37 @@ function checkLogin(username, passwordMd5) {
   var data = sheet.getDataRange().getValues();
   
   for (var i = 1; i < data.length; i++) {
-    var dbUser = data[i][2]; // TenDangNhap
-    var dbPass = data[i][3]; // MatKhau (md5)
-    var dbStatus = data[i][4]; // TrangThaiHoatDong
+    // Xử lý triệt để khoảng trắng thừa và đồng bộ chữ thường để so sánh MD5 chính xác
+    var dbUser = data[i][2] ? data[i][2].toString().trim() : ""; 
+    var dbPass = data[i][3] ? data[i][3].toString().trim().toLowerCase() : ""; 
+    var dbStatus = data[i][4] ? data[i][4].toString().trim() : ""; 
     
-    if (dbUser == username && dbPass == passwordMd5) {
-      if (dbStatus !== "Hoạt động" && dbStatus !== "Active" && dbStatus !== true && dbStatus !== "TRUE" && dbStatus !== 1) {
-         // Chấp nhận nhiều định dạng trạng thái hoạt động
-         if(dbStatus.toString().toLowerCase() !== "hoạt động" && dbStatus.toString().toLowerCase() !== "active" && dbStatus !== true) {
-            return { success: false, message: "Tài khoản đang bị khóa." };
-         }
+    var inputUser = username ? username.toString().trim() : "";
+    var inputPassMd5 = passwordMd5 ? passwordMd5.toString().trim().toLowerCase() : "";
+
+    if (dbUser === inputUser && dbPass === inputPassMd5) {
+      if (dbStatus.toLowerCase() !== "hoạt động" && dbStatus.toLowerCase() !== "active" && dbStatus !== "true" && dbStatus !== "1") {
+         return { success: false, message: "Tài khoản đang bị khóa." };
       }
-      return { success: true, name: data[i][1] }; // Trả về Ten
+      return { success: true, name: data[i][1] };
     }
   }
   return { success: false, message: "Tên đăng nhập hoặc mật khẩu không đúng." };
+}
+
+// Hàm đổi định dạng MM/DD/YYYY sang DD/MM/YYYY
+function formatDateString(dateStr) {
+  if (!dateStr) return "";
+  var str = dateStr.toString().trim();
+  var match = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(.*)$/);
+  if (match) {
+    var month = match[1].padStart(2, '0');
+    var day = match[2].padStart(2, '0');
+    var year = match[3];
+    var time = match[4];
+    return day + '/' + month + '/' + year + time;
+  }
+  return str;
 }
 
 function fetchAllData() {
@@ -62,7 +77,6 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
   var infoHeaders = infoData[0];
   var regHeaders = regData[0];
   
-  // Xác định Index cột Event ID
   var regEventIdCol = typeof eventIdKeys === 'string' ? regHeaders.indexOf(eventIdKeys) : regHeaders.indexOf(eventIdKeys[0]);
   var infoEventIdCol = typeof eventIdKeys === 'string' ? infoHeaders.indexOf(eventIdKeys) : infoHeaders.indexOf(eventIdKeys[1]);
   
@@ -79,7 +93,7 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
     var id = infoData[i][infoEventIdCol];
     if (id) {
       eventsMap[id] = {
-        date: infoData[i][infoDateCol],
+        date: formatDateString(infoData[i][infoDateCol]),
         extra: extraInfoCol > -1 ? infoData[i][extraInfoCol] : ""
       };
     }
@@ -98,7 +112,7 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
     }
     
     groups[eId].participants.push({
-      time: regData[j][dateCol],
+      time: formatDateString(regData[j][dateCol]),
       name: regData[j][nameCol],
       phone: regData[j][phoneCol],
       status: regData[j][statusCol]
