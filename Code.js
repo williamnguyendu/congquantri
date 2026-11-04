@@ -24,7 +24,6 @@ function checkLogin(username, passwordMd5) {
   var data = sheet.getDataRange().getValues();
   
   for (var i = 1; i < data.length; i++) {
-    // Xử lý triệt để khoảng trắng thừa và đồng bộ chữ thường để so sánh MD5 chính xác
     var dbUser = data[i][2] ? data[i][2].toString().trim() : ""; 
     var dbPass = data[i][3] ? data[i][3].toString().trim().toLowerCase() : ""; 
     var dbStatus = data[i][4] ? data[i][4].toString().trim() : ""; 
@@ -42,7 +41,6 @@ function checkLogin(username, passwordMd5) {
   return { success: false, message: "Tên đăng nhập hoặc mật khẩu không đúng." };
 }
 
-// Hàm đổi định dạng MM/DD/YYYY sang DD/MM/YYYY
 function formatDateString(dateStr) {
   if (!dateStr) return "";
   var str = dateStr.toString().trim();
@@ -82,6 +80,7 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
   
   var infoDateCol = infoHeaders.indexOf("NgayToChuc");
   var extraInfoCol = infoHeaders.indexOf(extraInfoKeys[0]);
+  var infoStatusCol = infoHeaders.indexOf("TrangThai"); // Đã thêm lấy trạng thái sự kiện
   
   var dateCol = regHeaders.indexOf("ThoiGianDangKy") > -1 ? regHeaders.indexOf("ThoiGianDangKy") : regHeaders.indexOf("ThoiGian");
   var nameCol = regHeaders.indexOf("HoVaTen") > -1 ? regHeaders.indexOf("HoVaTen") : regHeaders.indexOf("HoTen");
@@ -94,7 +93,8 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
     if (id) {
       eventsMap[id] = {
         date: formatDateString(infoData[i][infoDateCol]),
-        extra: extraInfoCol > -1 ? infoData[i][extraInfoCol] : ""
+        extra: extraInfoCol > -1 ? infoData[i][extraInfoCol] : "",
+        status: infoStatusCol > -1 ? infoData[i][infoStatusCol] : "" // Đưa trạng thái vào map
       };
     }
   }
@@ -106,7 +106,7 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
     
     if (!groups[eId]) {
       groups[eId] = {
-        info: eventsMap[eId] || { date: "Không xác định", extra: "" },
+        info: eventsMap[eId] || { date: "Không xác định", extra: "", status: "" },
         participants: []
       };
     }
