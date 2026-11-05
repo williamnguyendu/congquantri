@@ -80,12 +80,16 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
   
   var infoDateCol = infoHeaders.indexOf("NgayToChuc");
   var extraInfoCol = infoHeaders.indexOf(extraInfoKeys[0]);
-  var infoStatusCol = infoHeaders.indexOf("TrangThai"); // Đã thêm lấy trạng thái sự kiện
+  var infoStatusCol = infoHeaders.indexOf("TrangThai"); 
+  var infoStatusCheckInCol = infoHeaders.indexOf("TrangThaiCheckIn"); // Cột trạng thái checkin
   
   var dateCol = regHeaders.indexOf("ThoiGianDangKy") > -1 ? regHeaders.indexOf("ThoiGianDangKy") : regHeaders.indexOf("ThoiGian");
   var nameCol = regHeaders.indexOf("HoVaTen") > -1 ? regHeaders.indexOf("HoVaTen") : regHeaders.indexOf("HoTen");
   var phoneCol = regHeaders.indexOf("SoDienThoai");
   var statusCol = regHeaders.indexOf("TrangThaiPheDuyet") > -1 ? regHeaders.indexOf("TrangThaiPheDuyet") : regHeaders.indexOf("TrangThai");
+  
+  var regMaBiMatCol = regHeaders.indexOf("MaBiMat"); // Mã bí mật
+  var regCheckInCol = regHeaders.indexOf("CheckIn"); // Thời gian checkin
 
   var eventsMap = {};
   for (var i = 1; i < infoData.length; i++) {
@@ -94,7 +98,8 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
       eventsMap[id] = {
         date: formatDateString(infoData[i][infoDateCol]),
         extra: extraInfoCol > -1 ? infoData[i][extraInfoCol] : "",
-        status: infoStatusCol > -1 ? infoData[i][infoStatusCol] : "" // Đưa trạng thái vào map
+        status: infoStatusCol > -1 ? infoData[i][infoStatusCol] : "",
+        statusCheckIn: infoStatusCheckInCol > -1 ? infoData[i][infoStatusCheckInCol] : ""
       };
     }
   }
@@ -106,7 +111,7 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
     
     if (!groups[eId]) {
       groups[eId] = {
-        info: eventsMap[eId] || { date: "Không xác định", extra: "", status: "" },
+        info: eventsMap[eId] || { date: "Không xác định", extra: "", status: "", statusCheckIn: "" },
         participants: []
       };
     }
@@ -115,7 +120,9 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
       time: formatDateString(regData[j][dateCol]),
       name: regData[j][nameCol],
       phone: regData[j][phoneCol],
-      status: regData[j][statusCol]
+      status: regData[j][statusCol],
+      maBiMat: regMaBiMatCol > -1 ? regData[j][regMaBiMatCol] : "",
+      checkIn: regCheckInCol > -1 ? regData[j][regCheckInCol] : ""
     });
   }
   

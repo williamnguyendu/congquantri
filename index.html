@@ -7,17 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- THÊM THƯ VIỆN CHART.JS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .spinner {
-            border: 3px solid rgba(79, 70, 229, 0.1); border-left-color: #4f46e5;
-            border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite;
-        }
+        .spinner { border: 3px solid rgba(79, 70, 229, 0.1); border-left-color: #4f46e5; border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden { display: none !important; }
         
@@ -27,31 +23,50 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* Animation Login Background */
+        .login-bg {
+            background: linear-gradient(-45deg, #e0e7ff, #fbcfe8, #bfdbfe, #ddd6fe);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .bg-shape { position: absolute; filter: blur(60px); z-index: 0; opacity: 0.7; animation: floatShape 8s ease-in-out infinite; }
+        .bg-shape-1 { width: 350px; height: 350px; background: #818cf8; top: -100px; left: -100px; border-radius: 50%; animation-delay: 0s; }
+        .bg-shape-2 { width: 450px; height: 450px; background: #f472b6; bottom: -150px; right: -100px; border-radius: 50%; animation-delay: -4s; }
+        @keyframes floatShape { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(40px) scale(1.05); } }
     </style>
 </head>
 <body class="h-screen overflow-hidden flex text-slate-800">
 
     <!-- Login Screen -->
-    <div id="loginScreen" class="fixed inset-0 bg-slate-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-md border border-slate-100">
+    <div id="loginScreen" class="fixed inset-0 login-bg z-50 flex items-center justify-center p-4 overflow-hidden">
+        <div class="bg-shape bg-shape-1"></div>
+        <div class="bg-shape bg-shape-2"></div>
+        
+        <div class="bg-white/80 backdrop-blur-xl p-10 rounded-3xl shadow-[0_8px_40px_rgb(0,0,0,0.08)] w-full max-w-md border border-white/50 relative z-10">
             <div class="text-center mb-10">
-                <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 text-3xl shadow-sm">
+                <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white text-3xl shadow-lg shadow-indigo-200">
                     <i class="fa-solid fa-cube"></i>
                 </div>
                 <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Pride Home</h2>
-                <p class="text-sm text-slate-500 mt-2 font-medium">Hệ thống quản lý sự kiện chuyên nghiệp</p>
+                <p class="text-sm text-slate-500 mt-2 font-medium">Hệ thống quản lý sự kiện</p>
             </div>
             <div id="loginError" class="text-red-500 text-sm text-center mb-5 bg-red-50 p-3 rounded-xl font-medium hidden"></div>
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="mb-5">
                     <label class="block text-slate-700 text-sm font-semibold mb-2">Tên đăng nhập</label>
-                    <input type="text" id="username" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required>
+                    <input type="text" id="username" class="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required>
                 </div>
                 <div class="mb-8">
                     <label class="block text-slate-700 text-sm font-semibold mb-2">Mật khẩu</label>
-                    <input type="password" id="password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required>
+                    <input type="password" id="password" class="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required>
                 </div>
-                <button type="submit" id="btnLogin" class="w-full bg-indigo-600 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-indigo-700 transition-all flex justify-center items-center gap-2">
+                <button type="submit" id="btnLogin" class="w-full bg-indigo-600 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-indigo-700 transition-all flex justify-center items-center gap-2 shadow-lg shadow-indigo-200">
                     <span>Đăng nhập hệ thống</span>
                 </button>
             </form>
@@ -60,8 +75,6 @@
 
     <!-- Dashboard Screen -->
     <div id="dashboardScreen" class="hidden w-full h-full flex relative">
-        
-        <!-- Mobile Sidebar Overlay -->
         <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
         <!-- Sidebar -->
@@ -77,20 +90,25 @@
             <nav class="flex-1 py-6 px-5 overflow-y-auto">
                 <ul class="space-y-1.5 mb-6">
                     <li><button onclick="switchCategory('overview')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="overview"><i class="fa-solid fa-chart-pie w-5 text-center"></i> Tổng quan</button></li>
+                    <li><button onclick="switchCategory('statistics')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="statistics"><i class="fa-solid fa-ranking-star w-5 text-center"></i> Thống kê hạng</button></li>
                 </ul>
+
+                <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Quản lý Check-in</p>
+                <ul class="space-y-1.5 mb-6">
+                    <li><button onclick="switchCategory('checkin')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="checkin"><i class="fa-solid fa-qrcode w-5 text-center"></i> Cổng Check-in</button></li>
+                </ul>
+
                 <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Quản lý sự kiện</p>
                 <ul class="space-y-1.5">
                     <li><button onclick="switchCategory('masoi')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="masoi"><i class="fa-solid fa-moon w-5 text-center"></i> Làng Ma Sói</button></li>
                     <li><button onclick="switchCategory('cafe')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="cafe"><i class="fa-solid fa-mug-hot w-5 text-center"></i> Pride Cafe</button></li>
-                    <li><button onclick="switchCategory('event')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="event"><i class="fa-solid fa-calendar-star w-5 text-center"></i> Pride Event</button></li>
+                    <li><button onclick="switchCategory('event')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="event"><i class="fa-solid fa-ticket w-5 text-center"></i> Pride Event</button></li>
                     <li><button onclick="switchCategory('talk')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="talk"><i class="fa-solid fa-microphone w-5 text-center"></i> Pride Talk</button></li>
                 </ul>
             </nav>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 flex flex-col h-full bg-slate-50/50 overflow-hidden relative">
-            <!-- Topbar -->
             <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center justify-between px-4 lg:px-8 shrink-0 z-10 sticky top-0">
                 <div class="flex items-center gap-4">
                     <button onclick="toggleSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
@@ -111,22 +129,15 @@
                 </div>
             </header>
 
-            <!-- Main Scrollable Area -->
             <div class="flex-1 overflow-auto p-4 lg:p-8 relative">
                 <div id="contentLoader" class="absolute inset-0 bg-slate-50/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center hidden">
                     <div class="spinner mb-4"></div>
-                    <p class="text-sm text-slate-500 font-semibold tracking-wide">Đang đồng bộ dữ liệu...</p>
+                    <p class="text-sm text-slate-500 font-semibold tracking-wide mt-3">Đang đồng bộ dữ liệu...</p>
                 </div>
 
                 <!-- OVERVIEW SECTION -->
                 <div id="overviewContainer" class="hidden h-full flex-col max-w-7xl mx-auto w-full">
-                    
-                    <!-- Thống kê Card -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pb-6" id="overviewGrid">
-                        <!-- Sinh tự động bằng JS -->
-                    </div>
-                    
-                    <!-- Biểu đồ -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pb-6" id="overviewGrid"></div>
                     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 xl:p-8 mb-10 flex-shrink-0">
                         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                             <h3 class="text-xl font-extrabold text-slate-800 tracking-tight">Biểu đồ Lượt đăng ký</h3>
@@ -146,9 +157,118 @@
                     </div>
                 </div>
 
-                <!-- TABLE SECTION -->
+                <!-- STATISTICS SECTION -->
+                <div id="statisticsContainer" class="hidden h-full flex-col max-w-7xl mx-auto w-full">
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col h-full overflow-hidden mb-10">
+                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-5 bg-white">
+                            <div class="flex items-center gap-4 w-full sm:w-auto">
+                                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-trophy text-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-800">Xếp hạng Fan Cứng</h3>
+                                    <p class="text-xs text-slate-500">Dựa trên số lượt đã phê duyệt</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                                <div class="relative w-full sm:w-56">
+                                    <select id="statTimeFilter" onchange="renderStatistics()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer appearance-none pr-10">
+                                        <option value="all">Toàn thời gian</option>
+                                        <option value="this_month">Tháng này</option>
+                                        <option value="last_month">Tháng trước</option>
+                                        <option value="this_year">Năm nay</option>
+                                        <option value="last_year">Năm trước</option>
+                                        <option value="last_6_months">6 tháng gần nhất</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down absolute right-4 top-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                                </div>
+                                <div class="relative w-full sm:w-64">
+                                    <i class="fa-solid fa-search absolute left-4 top-3 text-slate-400"></i>
+                                    <input type="text" id="searchStatInput" placeholder="Tìm tên, SĐT..." onkeyup="searchStatTable()" class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-x-auto bg-white p-0">
+                            <table class="w-full text-left border-collapse min-w-[600px]" id="statTable">
+                                <thead class="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
+                                    <tr class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                        <th class="py-4 px-6 border-b border-slate-200 w-24 text-center">Hạng</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Họ và Tên</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Số Điện Thoại</th>
+                                        <th class="py-4 px-6 border-b border-slate-200 text-center">Lượt đăng ký</th>
+                                        <th class="py-4 px-6 border-b border-slate-200 text-center w-32">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="statTableBody" class="text-sm">
+                                </tbody>
+                            </table>
+                            <div id="statEmptyState" class="hidden flex flex-col items-center justify-center p-20 text-slate-400">
+                                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4"><i class="fa-solid fa-folder-open text-3xl text-slate-300"></i></div>
+                                <p class="text-base font-semibold text-slate-600 text-center">Không có dữ liệu thống kê trong thời gian này</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHECKIN SECTION -->
+                <div id="checkinContainer" class="hidden h-full flex-col max-w-7xl mx-auto w-full">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6">
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200 flex items-center gap-5 shadow-sm">
+                            <div class="w-14 h-14 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl"><i class="fa-solid fa-users"></i></div>
+                            <div><p class="text-xs font-bold text-slate-400 uppercase">Tổng đăng ký</p><p class="text-3xl font-black text-slate-800" id="checkinTotal">0</p></div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200 flex items-center gap-5 shadow-sm">
+                            <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl"><i class="fa-solid fa-user-check"></i></div>
+                            <div><p class="text-xs font-bold text-slate-400 uppercase">Đã Check-in</p><p class="text-3xl font-black text-emerald-600" id="checkinDone">0</p></div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200 flex items-center gap-5 shadow-sm">
+                            <div class="w-14 h-14 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xl"><i class="fa-solid fa-user-clock"></i></div>
+                            <div><p class="text-xs font-bold text-slate-400 uppercase">Chưa Check-in</p><p class="text-3xl font-black text-slate-600" id="checkinPending">0</p></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col h-full overflow-hidden mb-10">
+                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-5 bg-white">
+                            <div class="flex-1 w-full flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-qrcode text-lg"></i></div>
+                                <div class="flex-1 max-w-xs">
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Sự kiện mở Check-in</label>
+                                    <select id="checkinEventSelector" onchange="renderCheckinTable()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer appearance-none pr-10"></select>
+                                </div>
+                            </div>
+                            <div class="relative w-full sm:w-64">
+                                <i class="fa-solid fa-search absolute left-4 top-3 text-slate-400"></i>
+                                <input type="text" id="searchCheckinInput" placeholder="Tìm tên, SĐT, Mã..." onkeyup="searchCheckinTable()" class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-x-auto bg-white p-0">
+                            <table class="w-full text-left border-collapse min-w-[800px]" id="checkinTable">
+                                <thead class="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
+                                    <tr class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                        <th class="py-4 px-6 border-b border-slate-200">STT</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Họ và Tên</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Số Điện Thoại</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Mã Bí Mật</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Thời gian Check-in</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Trạng Thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="checkinTableBody" class="text-sm">
+                                </tbody>
+                            </table>
+                            <div id="checkinEmptyState" class="hidden flex flex-col items-center justify-center p-20 text-slate-400">
+                                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4"><i class="fa-solid fa-qrcode text-3xl text-slate-300"></i></div>
+                                <p class="text-base font-semibold text-slate-600 text-center">Không có dữ liệu cho sự kiện này</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLE SECTION (For Normal Events) -->
                 <div id="dataContainer" class="hidden h-full flex-col max-w-7xl mx-auto w-full">
-                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col h-full overflow-hidden">
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col h-full overflow-hidden mb-10">
                         <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-center gap-5 bg-white">
                             <div class="w-full flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
@@ -156,11 +276,9 @@
                                 </div>
                                 <div class="flex-1 max-w-xs">
                                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Chọn ngày sự kiện</label>
-                                    <select id="eventDateSelector" onchange="renderTableForSelectedDate()" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer appearance-none">
-                                    </select>
+                                    <select id="eventDateSelector" onchange="renderTableForSelectedDate()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer appearance-none"></select>
                                 </div>
                             </div>
-
                             <div class="flex flex-col md:flex-row gap-4 w-full xl:w-auto">
                                 <div class="relative w-full xl:w-64">
                                     <i class="fa-solid fa-search absolute left-4 top-3 text-slate-400"></i>
@@ -183,13 +301,10 @@
                                         <th class="py-4 px-6 border-b border-slate-200">Trạng Thái</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tableBody" class="text-sm">
-                                </tbody>
+                                <tbody id="tableBody" class="text-sm"></tbody>
                             </table>
                             <div id="emptyState" class="hidden flex flex-col items-center justify-center p-20 text-slate-400">
-                                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                                    <i class="fa-solid fa-inbox text-3xl text-slate-300"></i>
-                                </div>
+                                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4"><i class="fa-solid fa-inbox text-3xl text-slate-300"></i></div>
                                 <p class="text-base font-semibold text-slate-600 text-center">Chưa có danh sách đăng ký</p>
                             </div>
                         </div>
@@ -197,6 +312,29 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- User Detail Modal (Lịch sử hoạt động) -->
+    <div id="userDetailModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4 lg:p-6">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden border border-slate-200">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2.5"><i class="fa-solid fa-clock-rotate-left text-indigo-500"></i> Lịch sử tham gia</h3>
+                <button onclick="closeUserDetail()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="p-6 bg-slate-50 flex-1 overflow-hidden flex flex-col">
+                <div class="mb-5 shrink-0 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl"><i class="fa-regular fa-user"></i></div>
+                    <div>
+                        <p id="udName" class="text-lg font-bold text-slate-800 leading-tight"></p>
+                        <p id="udPhone" class="text-sm font-mono text-slate-500 mt-1 font-semibold"></p>
+                    </div>
+                </div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 shrink-0 ml-1">Danh sách hoạt động (<span id="udCount">0</span>)</p>
+                <div class="overflow-y-auto rounded-2xl border border-slate-200 bg-white flex-1 min-h-[150px] max-h-[350px]" id="udActivityList">
+                    <!-- Activities injected here -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- PDF Modal -->
@@ -221,16 +359,23 @@
     </div>
 
     <script>
-        // URL WEB APP CỦA BẠN VÀO ĐÂY
-        const API_URL = "https://script.google.com/macros/s/AKfycbzndX0Wf7shIghqDyY3g8oNbUzW-7YFBsOg3pnr2MBu6SF42SlRx8ROMaLxhAkzxngI/exec"; 
+        // DÁN URL APP SCRIPT VÀO ĐÂY !!!
+        const API_URL = "https://script.google.com/macros/s/AKfycby0V_mxQLIDhtyfc5gFNjMnuoxV0-uYkyQswEDc8bVRhw1QHxwEw680up80j7-ix9oG/exec"; 
         
         let globalData = {};
         let currentCategory = '';
         let currentEventId = '';
         let isSidebarOpen = false;
-        let overviewChart = null; // Biến lưu trữ biểu đồ
+        let overviewChart = null;
 
         document.addEventListener("DOMContentLoaded", () => checkAuth());
+
+        function parseDate(dateStr) {
+            if (!dateStr) return new Date(0);
+            const parts = dateStr.split(' ')[0].split('/'); 
+            if (parts.length >= 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+            return new Date(0);
+        }
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -304,6 +449,8 @@
             loader.classList.remove('hidden');
             document.getElementById('dataContainer').classList.add('hidden');
             document.getElementById('overviewContainer').classList.add('hidden');
+            document.getElementById('statisticsContainer').classList.add('hidden');
+            document.getElementById('checkinContainer').classList.add('hidden');
 
             try {
                 const response = await fetch(API_URL, {
@@ -311,8 +458,20 @@
                     body: JSON.stringify({ action: "getData" })
                 });
                 const res = await response.json();
+                
                 if (res.success) {
                     globalData = res.data;
+                    for (let cat in globalData) {
+                        for (let eventId in globalData[cat]) {
+                            globalData[cat][eventId].participants.forEach(p => {
+                                if (p.phone) {
+                                    let pStr = String(p.phone).trim();
+                                    if (pStr.length === 9 && !pStr.startsWith('0')) pStr = '0' + pStr;
+                                    p.phone = pStr;
+                                }
+                            });
+                        }
+                    }
                     switchCategory('overview');
                 }
             } catch (error) {
@@ -335,14 +494,54 @@
             activeBtn.classList.add('bg-indigo-50', 'text-indigo-700', 'font-bold');
             document.getElementById('pageTitle').innerText = activeBtn.innerText.trim();
 
+            document.getElementById('overviewContainer').classList.add('hidden');
+            document.getElementById('statisticsContainer').classList.add('hidden');
+            document.getElementById('dataContainer').classList.add('hidden');
+            document.getElementById('checkinContainer').classList.add('hidden');
+            
+            document.getElementById('overviewContainer').classList.remove('flex');
+            document.getElementById('statisticsContainer').classList.remove('flex');
+            document.getElementById('dataContainer').classList.remove('flex');
+            document.getElementById('checkinContainer').classList.remove('flex');
+
             if (catKey === 'overview') {
-                document.getElementById('dataContainer').classList.add('hidden');
                 document.getElementById('overviewContainer').classList.remove('hidden');
                 document.getElementById('overviewContainer').classList.add('flex');
                 renderOverview();
+            } else if (catKey === 'statistics') {
+                document.getElementById('statisticsContainer').classList.remove('hidden');
+                document.getElementById('statisticsContainer').classList.add('flex');
+                document.getElementById('statTimeFilter').value = 'all'; 
+                document.getElementById('searchStatInput').value = '';
+                renderStatistics();
+            } else if (catKey === 'checkin') {
+                document.getElementById('checkinContainer').classList.remove('hidden');
+                document.getElementById('checkinContainer').classList.add('flex');
+                
+                document.getElementById('searchCheckinInput').value = '';
+                const selector = document.getElementById('checkinEventSelector');
+                selector.innerHTML = '';
+                
+                const eventData = globalData['event'] || {};
+                let hasCheckinEvents = false;
+                for (const eventId in eventData) {
+                    const info = eventData[eventId].info;
+                    const statusCheckIn = (info.statusCheckIn || "").toLowerCase();
+                    if (statusCheckIn.includes('cho phép') || statusCheckIn.includes('cho phep')) {
+                        hasCheckinEvents = true;
+                        const optionText = `${info.date} ${info.extra ? ' - ' + info.extra : ''}`;
+                        selector.innerHTML += `<option value="${eventId}">${optionText}</option>`;
+                    }
+                }
+                
+                if (!hasCheckinEvents) {
+                    selector.innerHTML = '<option value="">Không có sự kiện mở check-in</option>';
+                    selector.disabled = true;
+                } else {
+                    selector.disabled = false;
+                }
+                renderCheckinTable();
             } else {
-                document.getElementById('overviewContainer').classList.add('hidden');
-                document.getElementById('overviewContainer').classList.remove('flex');
                 document.getElementById('dataContainer').classList.remove('hidden');
                 document.getElementById('dataContainer').classList.add('flex');
                 
@@ -369,6 +568,278 @@
             }
         }
 
+        // ============================
+        // TRANG CỔNG CHECK-IN
+        // ============================
+        function renderCheckinTable() {
+            const selector = document.getElementById('checkinEventSelector');
+            const eventId = selector.value;
+            const tbody = document.getElementById('checkinTableBody');
+            const table = document.getElementById('checkinTable');
+            const emptyState = document.getElementById('checkinEmptyState');
+            
+            const elTotal = document.getElementById('checkinTotal');
+            const elCheckedIn = document.getElementById('checkinDone');
+            const elNotCheckedIn = document.getElementById('checkinPending');
+            
+            tbody.innerHTML = '';
+
+            if (!eventId || !globalData['event'][eventId]) {
+                table.parentElement.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                elTotal.innerText = '0';
+                elCheckedIn.innerText = '0';
+                elNotCheckedIn.innerText = '0';
+                return;
+            }
+
+            const participants = globalData['event'][eventId].participants;
+            if (participants.length === 0) {
+                table.parentElement.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                elTotal.innerText = '0';
+                elCheckedIn.innerText = '0';
+                elNotCheckedIn.innerText = '0';
+                return;
+            }
+
+            table.parentElement.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            let total = participants.length;
+            let checkedInCount = 0;
+
+            participants.forEach((p, idx) => {
+                const isCheckedIn = p.checkIn && p.checkIn.toString().trim() !== "";
+                if (isCheckedIn) checkedInCount++;
+
+                const badgeClass = isCheckedIn ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200';
+                const statusText = isCheckedIn ? `<i class="fa-solid fa-check mr-1.5"></i> Đã check-in` : `Chưa check-in`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-indigo-50/30 border-b border-slate-100 transition-colors checkin-search-row">
+                        <td class="py-4 px-6 font-semibold text-slate-500 w-16 whitespace-nowrap">${idx + 1}</td>
+                        <td class="py-4 px-6 font-bold text-slate-800 checkin-search-name min-w-[150px]">${p.name}</td>
+                        <td class="py-4 px-6 font-mono text-slate-600 checkin-search-phone tracking-wide">${p.phone}</td>
+                        <td class="py-4 px-6 font-mono text-indigo-600 font-bold tracking-widest checkin-search-code">${p.maBiMat || '--'}</td>
+                        <td class="py-4 px-6 whitespace-nowrap">
+                            ${isCheckedIn ? `<span class="text-[13px] font-semibold text-emerald-600">${p.checkIn}</span>` : `<span class="text-xs text-slate-400 italic">--</span>`}
+                        </td>
+                        <td class="py-4 px-6 whitespace-nowrap">
+                            <span class="inline-flex items-center px-3.5 py-1.5 rounded-full text-[11px] font-bold border ${badgeClass}">
+                                ${statusText}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            elTotal.innerText = total;
+            elCheckedIn.innerText = checkedInCount;
+            elNotCheckedIn.innerText = total - checkedInCount;
+        }
+
+        function searchCheckinTable() {
+            const filter = document.getElementById('searchCheckinInput').value.toLowerCase();
+            const rows = document.getElementById('checkinTableBody').getElementsByClassName('checkin-search-row');
+            for (let i = 0; i < rows.length; i++) {
+                const name = rows[i].querySelector('.checkin-search-name').textContent.toLowerCase();
+                const phone = rows[i].querySelector('.checkin-search-phone').textContent.toLowerCase();
+                const code = rows[i].querySelector('.checkin-search-code').textContent.toLowerCase();
+                rows[i].style.display = (name.includes(filter) || phone.includes(filter) || code.includes(filter)) ? "" : "none";
+            }
+        }
+
+        // ============================
+        // TRANG THỐNG KÊ (LEADERBOARD)
+        // ============================
+        function renderStatistics() {
+            const filter = document.getElementById('statTimeFilter').value;
+            const tbody = document.getElementById('statTableBody');
+            const emptyState = document.getElementById('statEmptyState');
+            const table = document.getElementById('statTable');
+            tbody.innerHTML = '';
+            
+            const categories = ['masoi', 'cafe', 'event', 'talk'];
+            let statsMap = {};
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            categories.forEach(catKey => {
+                const catData = globalData[catKey] || {};
+                for (const eventId in catData) {
+                    const group = catData[eventId];
+                    const eventDate = parseDate(group.info.date);
+                    
+                    let isValidDate = true;
+                    if (filter === 'this_month') {
+                        isValidDate = (eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear);
+                    } else if (filter === 'last_month') {
+                        let lastM = currentMonth - 1; let lastY = currentYear;
+                        if (lastM < 0) { lastM = 11; lastY--; }
+                        isValidDate = (eventDate.getMonth() === lastM && eventDate.getFullYear() === lastY);
+                    } else if (filter === 'last_6_months') {
+                        const sixMonthsAgo = new Date(currentYear, currentMonth - 5, 1);
+                        isValidDate = (eventDate >= sixMonthsAgo && eventDate <= now);
+                    } else if (filter === 'this_year') {
+                        isValidDate = (eventDate.getFullYear() === currentYear);
+                    } else if (filter === 'last_year') {
+                        isValidDate = (eventDate.getFullYear() === currentYear - 1);
+                    }
+
+                    if (isValidDate) {
+                        group.participants.forEach(p => {
+                            const isApproved = p.status.toLowerCase().includes('duyệt') || p.status.toLowerCase().includes('thành công');
+                            if (isApproved && p.phone) {
+                                const phoneStr = String(p.phone).trim();
+                                if(!statsMap[phoneStr]) {
+                                    statsMap[phoneStr] = { count: 0, latestName: p.name };
+                                }
+                                statsMap[phoneStr].count++;
+                                statsMap[phoneStr].latestName = p.name;
+                            }
+                        });
+                    }
+                }
+            });
+
+            let statsArray = Object.keys(statsMap).map(phone => ({
+                phone: phone, name: statsMap[phone].latestName, count: statsMap[phone].count
+            }));
+
+            statsArray.sort((a, b) => b.count - a.count);
+
+            if (statsArray.length === 0) {
+                table.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            table.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            statsArray.forEach((item, index) => {
+                const rank = index + 1;
+                let rankHTML = `<span class="font-bold text-slate-500">${rank}</span>`;
+                
+                if (rank === 1) rankHTML = `<div class="w-8 h-8 mx-auto bg-amber-100 text-amber-500 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-trophy"></i></div>`;
+                else if (rank === 2) rankHTML = `<div class="w-8 h-8 mx-auto bg-slate-200 text-slate-500 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-medal"></i></div>`;
+                else if (rank === 3) rankHTML = `<div class="w-8 h-8 mx-auto bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-award"></i></div>`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-indigo-50/30 border-b border-slate-100 transition-colors stat-search-row">
+                        <td class="py-4 px-6 text-center">${rankHTML}</td>
+                        <td class="py-4 px-6 font-bold text-slate-800 stat-name">${item.name}</td>
+                        <td class="py-4 px-6 font-mono text-slate-600 stat-phone tracking-wide">${item.phone}</td>
+                        <td class="py-4 px-6 text-center">
+                            <span class="inline-flex items-center justify-center bg-indigo-50 text-indigo-700 font-black px-3 py-1.5 rounded-lg border border-indigo-100 min-w-[3rem]">
+                                ${item.count}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <button onclick="openUserDetail('${item.phone}')" class="px-4 py-1.5 bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 mx-auto">
+                                <i class="fa-solid fa-eye"></i> Xem lịch sử
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            searchStatTable();
+        }
+
+        function searchStatTable() {
+            const filter = document.getElementById('searchStatInput').value.toLowerCase();
+            const rows = document.getElementById('statTableBody').getElementsByClassName('stat-search-row');
+            for (let i = 0; i < rows.length; i++) {
+                const name = rows[i].querySelector('.stat-name').textContent.toLowerCase();
+                const phone = rows[i].querySelector('.stat-phone').textContent.toLowerCase();
+                rows[i].style.display = (name.includes(filter) || phone.includes(filter)) ? "" : "none";
+            }
+        }
+
+        // ============================
+        // POPUP CHI TIẾT NGƯỜI DÙNG
+        // ============================
+        function openUserDetail(phoneStr) {
+            const catNames = { 'masoi': 'Làng Ma Sói', 'cafe': 'Pride Cafe', 'event': 'Pride Event', 'talk': 'Pride Talk' };
+            let activities = []; let userName = "";
+
+            const filter = document.getElementById('statTimeFilter').value;
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            for (let cat in globalData) {
+                for (let eventId in globalData[cat]) {
+                    const group = globalData[cat][eventId];
+                    const eventDate = parseDate(group.info.date);
+                    
+                    let isValidDate = true;
+                    if (filter === 'this_month') {
+                        isValidDate = (eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear);
+                    } else if (filter === 'last_month') {
+                        let lastM = currentMonth - 1; let lastY = currentYear;
+                        if (lastM < 0) { lastM = 11; lastY--; }
+                        isValidDate = (eventDate.getMonth() === lastM && eventDate.getFullYear() === lastY);
+                    } else if (filter === 'last_6_months') {
+                        const sixMonthsAgo = new Date(currentYear, currentMonth - 5, 1);
+                        isValidDate = (eventDate >= sixMonthsAgo && eventDate <= now);
+                    } else if (filter === 'this_year') {
+                        isValidDate = (eventDate.getFullYear() === currentYear);
+                    } else if (filter === 'last_year') {
+                        isValidDate = (eventDate.getFullYear() === currentYear - 1);
+                    }
+
+                    if (isValidDate) {
+                        group.participants.forEach(p => {
+                            const isApproved = p.status.toLowerCase().includes('duyệt') || p.status.toLowerCase().includes('thành công');
+                            if (isApproved && String(p.phone) === String(phoneStr)) {
+                                userName = p.name;
+                                activities.push({ dateStr: group.info.date, dateObj: eventDate, type: catNames[cat] });
+                            }
+                        });
+                    }
+                }
+            }
+
+            activities.sort((a, b) => b.dateObj - a.dateObj);
+
+            document.getElementById('udName').innerText = userName;
+            document.getElementById('udPhone').innerText = phoneStr;
+            document.getElementById('udCount').innerText = activities.length;
+            
+            const listEl = document.getElementById('udActivityList');
+            listEl.innerHTML = '';
+            
+            if(activities.length === 0) {
+                 listEl.innerHTML = '<div class="p-8 text-center text-sm text-slate-500 font-medium">Không có dữ liệu</div>';
+            } else {
+                 activities.forEach((act, idx) => {
+                     listEl.innerHTML += `
+                        <div class="p-4 border-b border-slate-100 flex justify-between items-center hover:bg-slate-50 transition ${idx === activities.length -1 ? 'border-0' : ''}">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0"><i class="fa-regular fa-calendar-check text-base"></i></div>
+                                <div>
+                                    <p class="font-bold text-slate-700 text-sm">${act.type}</p>
+                                    <p class="text-xs text-slate-500 mt-1 font-medium"><i class="fa-regular fa-clock mr-1"></i> ${act.dateStr}</p>
+                                </div>
+                            </div>
+                        </div>
+                     `;
+                 });
+            }
+
+            document.getElementById('userDetailModal').classList.remove('hidden');
+        }
+
+        function closeUserDetail() {
+            document.getElementById('userDetailModal').classList.add('hidden');
+        }
+
+        // ============================
+        // TRANG TỔNG QUAN & BIỂU ĐỒ
+        // ============================
         function renderOverview() {
             const grid = document.getElementById('overviewGrid');
             grid.innerHTML = '';
@@ -376,55 +847,43 @@
             const categories = [
                 { key: 'masoi', name: 'Làng Ma Sói', icon: 'fa-moon', color: 'text-indigo-600', bg: 'bg-indigo-50', dot: 'bg-indigo-600' },
                 { key: 'cafe', name: 'Pride Cafe', icon: 'fa-mug-hot', color: 'text-orange-600', bg: 'bg-orange-50', dot: 'bg-orange-500' },
-                { key: 'event', name: 'Pride Event', icon: 'fa-calendar-star', color: 'text-rose-600', bg: 'bg-rose-50', dot: 'bg-rose-500' },
+                { key: 'event', name: 'Pride Event', icon: 'fa-ticket', color: 'text-rose-600', bg: 'bg-rose-50', dot: 'bg-rose-500' },
                 { key: 'talk', name: 'Pride Talk', icon: 'fa-microphone', color: 'text-sky-600', bg: 'bg-sky-50', dot: 'bg-sky-500' }
             ];
 
             categories.forEach(cat => {
                 const catData = globalData[cat.key] || {};
-                let approvedCount = 0;
-                let phoneMap = {};
-                let openEvents = [];
+                let approvedCount = 0; let phoneMap = {}; let openEvents = [];
 
                 for (const eventId in catData) {
                     const group = catData[eventId];
                     const status = (group.info.status || "").toLowerCase();
-                    if ((status.includes("mở") || status.includes("open") || status.includes("đang")) && !status.includes("đóng")) {
-                        openEvents.push(group.info.date);
-                    }
+                    if ((status.includes("mở") || status.includes("open") || status.includes("đang")) && !status.includes("đóng")) openEvents.push(group.info.date);
 
                     group.participants.forEach(p => {
                         const isApproved = p.status.toLowerCase().includes('duyệt') || p.status.toLowerCase().includes('thành công');
                         if (isApproved) approvedCount++;
-                        
                         if (p.phone) {
                             const phoneStr = String(p.phone).trim();
                             if(!phoneMap[phoneStr]) phoneMap[phoneStr] = { count: 0, latestName: p.name };
-                            phoneMap[phoneStr].count++;
-                            phoneMap[phoneStr].latestName = p.name;
+                            phoneMap[phoneStr].count++; phoneMap[phoneStr].latestName = p.name;
                         }
                     });
                 }
 
-                let maxPhone = "Chưa có";
-                let maxName = "N/A";
-                let maxCount = 0;
-
+                let maxPhone = "Chưa có"; let maxName = "N/A"; let maxCount = 0;
                 for (const phone in phoneMap) {
                     if (phoneMap[phone].count > maxCount) {
-                        maxCount = phoneMap[phone].count;
-                        maxPhone = phone;
-                        maxName = phoneMap[phone].latestName;
+                        maxCount = phoneMap[phone].count; maxPhone = phone; maxName = phoneMap[phone].latestName;
                     }
                 }
 
                 const openEventText = openEvents.length > 0 
-                    ? `<p class="text-sm font-semibold text-slate-800 mt-1">${openEvents.length} sự kiện đang mở</p>
-                       <p class="text-[13px] text-slate-500 mt-1 leading-relaxed"><i class="fa-regular fa-clock mr-1"></i> ${openEvents.join(', ')}</p>` 
+                    ? `<p class="text-sm font-semibold text-slate-800 mt-1">${openEvents.length} sự kiện đang mở</p><p class="text-[13px] text-slate-500 mt-1 leading-relaxed"><i class="fa-regular fa-clock mr-1"></i> ${openEvents.join(', ')}</p>` 
                     : `<p class="text-[13px] font-medium text-slate-400 mt-1 italic">Tất cả đã đóng đăng ký</p>`;
 
                 const topUserText = maxCount > 0 
-                    ? `<div class="mt-2 bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center">
+                    ? `<div class="mt-2 bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center cursor-pointer hover:bg-indigo-50 hover:border-indigo-100 transition" onclick="openUserDetail('${maxPhone}')" title="Nhấn để xem chi tiết">
                            <div>
                                <p class="text-sm font-bold text-slate-800">${maxName}</p>
                                <p class="text-xs font-mono text-slate-500 mt-0.5">${maxPhone}</p>
@@ -438,62 +897,28 @@
                 const cardHTML = `
                     <div class="bg-white rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200 p-6 xl:p-8 flex flex-col">
                         <div class="flex items-center gap-4 mb-6">
-                            <div class="w-14 h-14 rounded-2xl ${cat.bg} ${cat.color} flex items-center justify-center shrink-0 shadow-inner">
-                                <i class="fa-solid ${cat.icon} text-2xl"></i>
-                            </div>
+                            <div class="w-14 h-14 rounded-2xl ${cat.bg} ${cat.color} flex items-center justify-center shrink-0 shadow-inner"><i class="fa-solid ${cat.icon} text-2xl"></i></div>
                             <h3 class="text-xl font-extrabold text-slate-800 tracking-tight">${cat.name}</h3>
                         </div>
                         <div class="space-y-6 flex-1">
                             <div class="bg-slate-50/70 p-4 rounded-2xl border border-slate-100 flex justify-between items-center">
-                                <div>
-                                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Đã Phê Duyệt</p>
-                                    <p class="text-4xl font-black ${cat.color} mt-1">${approvedCount}</p>
-                                </div>
-                                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
-                                    <i class="fa-solid fa-check ${cat.color}"></i>
-                                </div>
+                                <div><p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Đã Phê Duyệt</p><p class="text-4xl font-black ${cat.color} mt-1">${approvedCount}</p></div>
+                                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm"><i class="fa-solid fa-check ${cat.color}"></i></div>
                             </div>
-                            <div>
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${cat.dot} animate-pulse"></span> Tình trạng sự kiện</p>
-                                ${openEventText}
-                            </div>
-                            <div>
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Fan Cứng (ĐK nhiều nhất)</p>
-                                ${topUserText}
-                            </div>
+                            <div><p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${cat.dot} animate-pulse"></span> Tình trạng sự kiện</p>${openEventText}</div>
+                            <div><p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Fan Cứng (ĐK nhiều nhất)</p>${topUserText}</div>
                         </div>
                     </div>
                 `;
                 grid.innerHTML += cardHTML;
             });
 
-            // Gọi hàm render biểu đồ (Lọc theo Toàn thời gian mặc định)
             updateChart(document.getElementById('chartFilter').value);
         }
 
-        // ==========================================
-        // LOGIC XỬ LÝ BIỂU ĐỒ CHART.JS
-        // ==========================================
-        function parseDate(dateStr) {
-            if (!dateStr) return new Date(0);
-            const parts = dateStr.split(' ')[0].split('/'); // Định dạng DD/MM/YYYY
-            if (parts.length >= 3) {
-                return new Date(parts[2], parts[1] - 1, parts[0]);
-            }
-            return new Date(0);
-        }
-
         function getChartData(filter) {
-            const categories = [
-                { key: 'masoi', name: 'Làng Ma Sói' },
-                { key: 'cafe', name: 'Pride Cafe' },
-                { key: 'event', name: 'Pride Event' },
-                { key: 'talk', name: 'Pride Talk' }
-            ];
-
+            const categories = [ { key: 'masoi', name: 'Làng Ma Sói' }, { key: 'cafe', name: 'Pride Cafe' }, { key: 'event', name: 'Pride Event' }, { key: 'talk', name: 'Pride Talk' } ];
             let rawData = [];
-
-            // 1. Thu thập dữ liệu tất cả sự kiện
             categories.forEach(cat => {
                 const catData = globalData[cat.key] || {};
                 for (const eventId in catData) {
@@ -501,18 +926,10 @@
                     const dateObj = parseDate(group.info.date);
                     const totalReg = group.participants.length;
                     
-                    if (totalReg > 0 && dateObj.getTime() > 0) {
-                        rawData.push({
-                            dateObj: dateObj,
-                            dateStr: group.info.date.split(' ')[0],
-                            eventName: cat.name,
-                            count: totalReg
-                        });
-                    }
+                    if (totalReg > 0 && dateObj.getTime() > 0) rawData.push({ dateObj: dateObj, dateStr: group.info.date.split(' ')[0], eventName: cat.name, count: totalReg });
                 }
             });
 
-            // 2. Lọc theo thời gian
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
@@ -520,129 +937,75 @@
             rawData = rawData.filter(item => {
                 const itemMonth = item.dateObj.getMonth();
                 const itemYear = item.dateObj.getFullYear();
-
-                if (filter === 'this_month') {
-                    return itemMonth === currentMonth && itemYear === currentYear;
-                } else if (filter === 'last_month') {
-                    let lastM = currentMonth - 1;
-                    let lastY = currentYear;
+                if (filter === 'this_month') return itemMonth === currentMonth && itemYear === currentYear;
+                else if (filter === 'last_month') {
+                    let lastM = currentMonth - 1, lastY = currentYear;
                     if (lastM < 0) { lastM = 11; lastY--; }
                     return itemMonth === lastM && itemYear === lastY;
                 } else if (filter === 'last_6_months') {
                     const sixMonthsAgo = new Date(currentYear, currentMonth - 5, 1);
                     return item.dateObj >= sixMonthsAgo && item.dateObj <= now;
                 }
-                return true; // 'all'
+                return true; 
             });
 
-            // 3. Sắp xếp tăng dần theo ngày
             rawData.sort((a, b) => a.dateObj - b.dateObj);
-
-            // 4. Nhóm lại theo chuỗi ngày (Trường hợp nhiều sự kiện tổ chức chung 1 ngày)
             let groupedData = {};
             rawData.forEach(item => {
-                if (!groupedData[item.dateStr]) {
-                    groupedData[item.dateStr] = {
-                        total: 0,
-                        events: []
-                    };
-                }
+                if (!groupedData[item.dateStr]) groupedData[item.dateStr] = { total: 0, events: [] };
                 groupedData[item.dateStr].total += item.count;
-                // Thêm tên sự kiện và số lượng vào danh sách hiển thị Tooltip
                 groupedData[item.dateStr].events.push(`• ${item.eventName}: ${item.count} lượt`);
             });
 
-            const labels = Object.keys(groupedData); // Trục X (Các ngày)
-            const dataPoints = labels.map(label => groupedData[label].total); // Trục Y (Tổng số lượt)
-            const tooltipsData = labels.map(label => groupedData[label].events); // Tooltip chú thích
-
-            return { labels, dataPoints, tooltipsData };
+            return { labels: Object.keys(groupedData), dataPoints: Object.keys(groupedData).map(label => groupedData[label].total), tooltipsData: Object.keys(groupedData).map(label => groupedData[label].events) };
         }
 
         function updateChart(filter) {
             const { labels, dataPoints, tooltipsData } = getChartData(filter);
-
             const ctx = document.getElementById('registrationChart').getContext('2d');
-
-            if (overviewChart) {
-                overviewChart.destroy(); // Hủy chart cũ trước khi vẽ chart mới để tránh dính data
-            }
+            if (overviewChart) overviewChart.destroy();
             
-            // Vẽ dải màu Gradient đẹp mắt cho Line chart
             const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(79, 70, 229, 0.4)'); // indigo-600 trong suốt
-            gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+            gradient.addColorStop(0, 'rgba(79, 70, 229, 0.4)'); gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
 
             overviewChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
-                    tooltipsData: tooltipsData, // Dữ liệu tự chế nhét vào chart để gọi ở Tooltip
+                    labels: labels, tooltipsData: tooltipsData,
                     datasets: [{
-                        label: 'Tổng lượt đăng ký',
-                        data: dataPoints,
-                        borderColor: '#4f46e5',
-                        backgroundColor: gradient,
-                        borderWidth: 3,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#4f46e5',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        fill: true,
-                        tension: 0.3 // Độ cong mềm mại của đường
+                        label: 'Tổng lượt đăng ký', data: dataPoints, borderColor: '#4f46e5', backgroundColor: gradient,
+                        borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#4f46e5', pointBorderWidth: 2,
+                        pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.3
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                            titleFont: { size: 14, family: 'Inter', weight: 'bold' },
-                            bodyFont: { size: 13, family: 'Inter' },
-                            padding: 14,
-                            cornerRadius: 12,
-                            boxPadding: 6,
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)', titleFont: { size: 14, family: 'Inter', weight: 'bold' },
+                            bodyFont: { size: 13, family: 'Inter' }, padding: 14, cornerRadius: 12, boxPadding: 6,
                             callbacks: {
-                                title: function(context) {
-                                    return 'Ngày tổ chức: ' + context[0].label;
-                                },
-                                label: function(context) {
-                                    return 'Tổng: ' + context.raw + ' đăng ký';
-                                },
-                                afterLabel: function(context) {
-                                    // Hiện chi tiết các sự kiện trong ngày đó ở dưới Tooltip
-                                    const eventDetails = context.chart.data.tooltipsData[context.dataIndex];
+                                title: function(ctx) { return 'Ngày tổ chức: ' + ctx[0].label; },
+                                label: function(ctx) { return 'Tổng: ' + ctx.raw + ' đăng ký'; },
+                                afterLabel: function(ctx) {
+                                    const eventDetails = ctx.chart.data.tooltipsData[ctx.dataIndex];
                                     return '\nChi tiết:\n' + eventDetails.join('\n');
                                 }
                             }
                         }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f1f5f9', drawBorder: false },
-                            ticks: { precision: 0, font: { family: 'Inter' }, color: '#64748b' },
-                            border: { dash: [4, 4] }
-                        },
-                        x: {
-                            grid: { display: false, drawBorder: false },
-                            ticks: { font: { family: 'Inter' }, color: '#64748b', maxTicksLimit: 10 }
-                        }
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false }, ticks: { precision: 0, font: { family: 'Inter' }, color: '#64748b' }, border: { dash: [4, 4] } },
+                        x: { grid: { display: false, drawBorder: false }, ticks: { font: { family: 'Inter' }, color: '#64748b', maxTicksLimit: 10 } }
                     }
                 }
             });
         }
-        // ==========================================
 
-
-        // XỬ LÝ TABLE
+        // ============================
+        // XỬ LÝ TABLE SỰ KIỆN CHUNG
+        // ============================
         function renderTableForSelectedDate() {
             const selector = document.getElementById('eventDateSelector');
             currentEventId = selector.value;
@@ -693,7 +1056,6 @@
         function searchCurrentTable() {
             const filter = document.getElementById('searchInput').value.toLowerCase();
             const rows = document.getElementById('tableBody').getElementsByClassName('search-row');
-            
             for (let i = 0; i < rows.length; i++) {
                 const name = rows[i].querySelector('.search-name').textContent.toLowerCase();
                 const phone = rows[i].querySelector('.search-phone').textContent.toLowerCase();
@@ -701,7 +1063,9 @@
             }
         }
 
+        // ============================
         // XUẤT PDF
+        // ============================
         function openPdfPreview() {
             if(!currentEventId) return alert('Vui lòng chọn một sự kiện để in.');
             const group = globalData[currentCategory][currentEventId];
@@ -745,9 +1109,7 @@
             document.getElementById('pdfModal').classList.remove('hidden');
         }
 
-        function closePdfPreview() {
-            document.getElementById('pdfModal').classList.add('hidden');
-        }
+        function closePdfPreview() { document.getElementById('pdfModal').classList.add('hidden'); }
 
         function downloadPdf() {
             const pdfArea = document.getElementById('pdfPrintArea');
