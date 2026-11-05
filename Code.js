@@ -41,16 +41,24 @@ function checkLogin(username, passwordMd5) {
   return { success: false, message: "Tên đăng nhập hoặc mật khẩu không đúng." };
 }
 
+// Hàm format ngày dùng cho các danh sách đăng ký
 function formatDateString(dateStr) {
   if (!dateStr) return "";
   var str = dateStr.toString().trim();
   var match = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(.*)$/);
   if (match) {
-    var month = match[1].padStart(2, '0');
-    var day = match[2].padStart(2, '0');
+    var p1 = parseInt(match[1], 10);
+    var p2 = parseInt(match[2], 10);
     var year = match[3];
     var time = match[4];
-    return day + '/' + month + '/' + year + time;
+    
+    if (p1 > 12) {
+       // Đã là định dạng Ngày/Tháng/Năm, không đảo
+       return match[1].padStart(2, '0') + '/' + match[2].padStart(2, '0') + '/' + year + time;
+    } else {
+       // Đảo Tháng/Ngày/Năm thành Ngày/Tháng/Năm
+       return match[2].padStart(2, '0') + '/' + match[1].padStart(2, '0') + '/' + year + time;
+    }
   }
   return str;
 }
@@ -61,11 +69,11 @@ function fetchAllData() {
     cafe: getGroupedData("1F6Xo5Xq0WRefvGZMtxk-sqp5yqXTwJ6Gy-bGRVzImms", "DangKyCafe", "LichCafe", "MaSuKienCafe", ["DiaDiem"]),
     event: getGroupedData("1xlGdKp9WZY2J6WcUvkfYrx1GTJHvrdrLvzeFmQPY86o", "DSDKSuKien", "ThongTinSuKien", ["MaSuKienWorkshop", "MaDangKySuKien"], ["TenSuKien"]),
     talk: getGroupedData("1WQKsrBCiY6DrEnLSMq1jxH8fn29t0npvwKq1DdvYb3o", "DangKyPrideTalk", "LichPrideTalk", "MaSuKienTalk", ["TenChuDe"]),
-    // Đã cập nhật ID mới theo yêu cầu của bạn
     feedback: getFeedbackData("18VmspeT4fjVB1DG2ye8FzhkqdHOxgqyL1MYyBjSTEnI")
   };
 }
 
+// Hàm đọc dữ liệu đánh giá: BỎ FORMAT DATE để giữ đúng 100% text hiển thị trên Google Sheets
 function getFeedbackData(spreadsheetId) {
   try {
     var ss = SpreadsheetApp.openById(spreadsheetId);
@@ -94,8 +102,8 @@ function getFeedbackData(spreadsheetId) {
       var id = infoData[i][infoEventIdCol];
       if (id) {
         eventsMap[id] = {
-          name: infoData[i][infoNameCol] || "",
-          date: formatDateString(infoData[i][infoDateCol]) || ""
+          name: infoData[i][infoNameCol] ? infoData[i][infoNameCol].toString().trim() : "",
+          date: infoData[i][infoDateCol] ? infoData[i][infoDateCol].toString().trim() : "" // Giữ nguyên bản
         };
       }
     }
@@ -113,7 +121,7 @@ function getFeedbackData(spreadsheetId) {
       }
       
       groups[eId].reviews.push({
-        time: formatDateString(reviewData[j][revTimeCol]),
+        time: reviewData[j][revTimeCol] ? reviewData[j][revTimeCol].toString().trim() : "", // Giữ nguyên bản
         format: parseFloat(reviewData[j][revFormatCol]) || 0,
         content: parseFloat(reviewData[j][revContentCol]) || 0,
         useful: parseFloat(reviewData[j][revUsefulCol]) || 0,
