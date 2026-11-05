@@ -60,8 +60,80 @@ function fetchAllData() {
     masoi: getGroupedData("1-H_mbJpwwLQvzLsjuF2ZG1lQaMlV0eXm0nIkICHphg8", "DangKyLangMaSoi", "LichLangMaSoi", "MaSuKienMaSoi", ["DiaDiem"]),
     cafe: getGroupedData("1F6Xo5Xq0WRefvGZMtxk-sqp5yqXTwJ6Gy-bGRVzImms", "DangKyCafe", "LichCafe", "MaSuKienCafe", ["DiaDiem"]),
     event: getGroupedData("1xlGdKp9WZY2J6WcUvkfYrx1GTJHvrdrLvzeFmQPY86o", "DSDKSuKien", "ThongTinSuKien", ["MaSuKienWorkshop", "MaDangKySuKien"], ["TenSuKien"]),
-    talk: getGroupedData("1WQKsrBCiY6DrEnLSMq1jxH8fn29t0npvwKq1DdvYb3o", "DangKyPrideTalk", "LichPrideTalk", "MaSuKienTalk", ["TenChuDe"])
+    talk: getGroupedData("1WQKsrBCiY6DrEnLSMq1jxH8fn29t0npvwKq1DdvYb3o", "DangKyPrideTalk", "LichPrideTalk", "MaSuKienTalk", ["TenChuDe"]),
+    // Đã cập nhật ID mới theo yêu cầu của bạn
+    feedback: getFeedbackData("18VmspeT4fjVB1DG2ye8FzhkqdHOxgqyL1MYyBjSTEnI")
   };
+}
+
+function getFeedbackData(spreadsheetId) {
+  try {
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var sheetInfo = ss.getSheetByName("SuKienDanhGia");
+    var sheetReview = ss.getSheetByName("NoiDungDanhGia");
+    
+    var infoData = sheetInfo.getDataRange().getDisplayValues();
+    var reviewData = sheetReview.getDataRange().getDisplayValues();
+    
+    var infoHeaders = infoData[0];
+    var reviewHeaders = reviewData[0];
+    
+    var infoEventIdCol = infoHeaders.indexOf("MaSuKienDanhGia");
+    var infoNameCol = infoHeaders.indexOf("TenSuKien");
+    var infoDateCol = infoHeaders.indexOf("NgayToChuc");
+    
+    var revEventIdCol = reviewHeaders.indexOf("MaSuKienDanhGia");
+    var revFormatCol = reviewHeaders.indexOf("DanhGiaHinhThuc");
+    var revContentCol = reviewHeaders.indexOf("DanhGiaNoiDung");
+    var revUsefulCol = reviewHeaders.indexOf("DanhGiaBoIch");
+    var revCommentCol = reviewHeaders.indexOf("GopY");
+    var revTimeCol = reviewHeaders.indexOf("ThoiGianDanhGia");
+
+    var eventsMap = {};
+    for (var i = 1; i < infoData.length; i++) {
+      var id = infoData[i][infoEventIdCol];
+      if (id) {
+        eventsMap[id] = {
+          name: infoData[i][infoNameCol] || "",
+          date: formatDateString(infoData[i][infoDateCol]) || ""
+        };
+      }
+    }
+
+    var groups = {};
+    for (var j = 1; j < reviewData.length; j++) {
+      var eId = reviewData[j][revEventIdCol];
+      if (!eId) continue;
+      
+      if (!groups[eId]) {
+        groups[eId] = {
+          info: eventsMap[eId] || { name: "Không xác định", date: "Không xác định" },
+          reviews: []
+        };
+      }
+      
+      groups[eId].reviews.push({
+        time: formatDateString(reviewData[j][revTimeCol]),
+        format: parseFloat(reviewData[j][revFormatCol]) || 0,
+        content: parseFloat(reviewData[j][revContentCol]) || 0,
+        useful: parseFloat(reviewData[j][revUsefulCol]) || 0,
+        comment: reviewData[j][revCommentCol] || ""
+      });
+    }
+    
+    for (var key in eventsMap) {
+      if (!groups[key]) {
+         groups[key] = {
+           info: eventsMap[key],
+           reviews: []
+         }
+      }
+    }
+
+    return groups;
+  } catch (e) {
+    return {};
+  }
 }
 
 function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys, extraInfoKeys) {
@@ -81,15 +153,15 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
   var infoDateCol = infoHeaders.indexOf("NgayToChuc");
   var extraInfoCol = infoHeaders.indexOf(extraInfoKeys[0]);
   var infoStatusCol = infoHeaders.indexOf("TrangThai"); 
-  var infoStatusCheckInCol = infoHeaders.indexOf("TrangThaiCheckIn"); // Cột trạng thái checkin
+  var infoStatusCheckInCol = infoHeaders.indexOf("TrangThaiCheckIn");
   
   var dateCol = regHeaders.indexOf("ThoiGianDangKy") > -1 ? regHeaders.indexOf("ThoiGianDangKy") : regHeaders.indexOf("ThoiGian");
   var nameCol = regHeaders.indexOf("HoVaTen") > -1 ? regHeaders.indexOf("HoVaTen") : regHeaders.indexOf("HoTen");
   var phoneCol = regHeaders.indexOf("SoDienThoai");
   var statusCol = regHeaders.indexOf("TrangThaiPheDuyet") > -1 ? regHeaders.indexOf("TrangThaiPheDuyet") : regHeaders.indexOf("TrangThai");
   
-  var regMaBiMatCol = regHeaders.indexOf("MaBiMat"); // Mã bí mật
-  var regCheckInCol = regHeaders.indexOf("CheckIn"); // Thời gian checkin
+  var regMaBiMatCol = regHeaders.indexOf("MaBiMat");
+  var regCheckInCol = regHeaders.indexOf("CheckIn");
 
   var eventsMap = {};
   for (var i = 1; i < infoData.length; i++) {
