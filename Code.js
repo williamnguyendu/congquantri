@@ -68,8 +68,51 @@ function fetchAllData() {
     talk: getGroupedData("1WQKsrBCiY6DrEnLSMq1jxH8fn29t0npvwKq1DdvYb3o", "DangKyPrideTalk", "LichPrideTalk", "MaSuKienTalk", ["TenChuDe"]),
     sport: getGroupedData("1Mu25JGgxcaKwMZ2iklVcb9wvEVibR4QW-WUIxkQl-ac", "DangKySport", "LichSport", "MaSport", ["TenSport"]),
     feedback: getFeedbackData("18VmspeT4fjVB1DG2ye8FzhkqdHOxgqyL1MYyBjSTEnI"),
-    tickets: getTicketData("1xlGdKp9WZY2J6WcUvkfYrx1GTJHvrdrLvzeFmQPY86o")
+    tickets: getTicketData("1xlGdKp9WZY2J6WcUvkfYrx1GTJHvrdrLvzeFmQPY86o"),
+    members: getMembersData("1LLS2iXbgQzg9exlMlKLVZX9wGLqAcOcC2gBViVlqHRk") // API lấy Thành viên
   };
+}
+
+// HÀM MỚI: LẤY DỮ LIỆU THÀNH VIÊN
+function getMembersData(spreadsheetId) {
+  try {
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var sheet = ss.getSheetByName("ThanhVien");
+    var data = sheet.getDataRange().getDisplayValues();
+    var headers = data[0];
+
+    var cMaSo = headers.indexOf("MaSoThanhVien");
+    var cTen = headers.indexOf("TenThanhVien");
+    var cBietDanh = headers.indexOf("BietDanh");
+    var cHinhAnh = headers.indexOf("HinhAnhDaiDien");
+    var cNguon = headers.indexOf("NguonDangKy");
+    var cMongMuon = headers.indexOf("MongMuon");
+    var cTinhThanh = headers.indexOf("TinhThanh");
+    var cNamSinh = headers.indexOf("NamSinh");
+    var cSDT = headers.indexOf("SoDienThoai");
+    var cThoiGian = headers.indexOf("ThoiGianDangKy");
+    var cTrangThai = headers.indexOf("TrangThai");
+
+    var membersList = [];
+    for (var i = 1; i < data.length; i++) {
+      membersList.push({
+        maSo: cMaSo > -1 ? data[i][cMaSo].toString().trim() : "",
+        ten: cTen > -1 ? data[i][cTen].toString().trim() : "",
+        bietDanh: cBietDanh > -1 ? data[i][cBietDanh].toString().trim() : "",
+        hinhAnh: cHinhAnh > -1 ? data[i][cHinhAnh].toString().trim() : "",
+        nguon: cNguon > -1 ? data[i][cNguon].toString().trim() : "",
+        mongMuon: cMongMuon > -1 ? data[i][cMongMuon].toString().trim() : "",
+        tinhThanh: cTinhThanh > -1 ? data[i][cTinhThanh].toString().trim() : "",
+        namSinh: cNamSinh > -1 ? data[i][cNamSinh].toString().trim() : "",
+        sdt: cSDT > -1 ? data[i][cSDT].toString().trim() : "",
+        thoiGian: cThoiGian > -1 ? formatDateString(data[i][cThoiGian]) : "",
+        trangThai: cTrangThai > -1 ? data[i][cTrangThai].toString().trim() : ""
+      });
+    }
+    return membersList;
+  } catch (e) {
+    return [];
+  }
 }
 
 function getTicketData(spreadsheetId) {
@@ -77,22 +120,17 @@ function getTicketData(spreadsheetId) {
     var ss = SpreadsheetApp.openById(spreadsheetId);
     var sheetInfo = ss.getSheetByName("ThongTinSuKien");
     var sheetReg = ss.getSheetByName("DSDKSuKien");
-
     var infoData = sheetInfo.getDataRange().getDisplayValues();
     var regData = sheetReg.getDataRange().getDisplayValues();
-
     var infoHeaders = infoData[0];
     var regHeaders = regData[0];
 
-    // Info Columns
     var iMaSuKien = infoHeaders.indexOf("MaDangKySuKien");
     var iTenSuKien = infoHeaders.indexOf("TenSuKien");
     var iNgayToChuc = infoHeaders.indexOf("NgayToChuc");
     var iGioToChuc = infoHeaders.indexOf("GioToChuc");
     var iDiaDiem = infoHeaders.indexOf("DiaDiemToChuc");
     var iGhiChuTrenVe = infoHeaders.indexOf("GhiChuTrenVe");
-
-    // Reg Columns
     var rThoiGian = regHeaders.indexOf("ThoiGian");
     var rHoTen = regHeaders.indexOf("HoTen");
     var rSoDienThoai = regHeaders.indexOf("SoDienThoai");
@@ -100,47 +138,32 @@ function getTicketData(spreadsheetId) {
     var rMaBiMat = regHeaders.indexOf("MaBiMat");
     var rMaSuKien = regHeaders.indexOf("MaSuKienWorkshop");
 
-    var result = {
-      events: [],
-      registrations: {}
-    };
-
+    var result = { events: [], registrations: {} };
     var eventMap = {};
     for (var i = 1; i < infoData.length; i++) {
       var eId = infoData[i][iMaSuKien];
       if (eId) {
-        var eObj = {
-          MaDangKySuKien: eId,
-          TenSuKien: infoData[i][iTenSuKien] || "",
-          // Đã thêm formatDateString vào đây để đồng bộ định dạng Ngày/Tháng/Năm
+        result.events.push({
+          MaDangKySuKien: eId, TenSuKien: infoData[i][iTenSuKien] || "",
           NgayToChuc: formatDateString(infoData[i][iNgayToChuc]), 
           GioToChuc: infoData[i][iGioToChuc] || "",
-          DiaDiemToChuc: infoData[i][iDiaDiem] || "",
-          GhiChuTrenVe: infoData[i][iGhiChuTrenVe] || ""
-        };
-        result.events.push(eObj);
+          DiaDiemToChuc: infoData[i][iDiaDiem] || "", GhiChuTrenVe: infoData[i][iGhiChuTrenVe] || ""
+        });
         eventMap[eId] = true;
         result.registrations[eId] = [];
       }
     }
-
     for (var j = 1; j < regData.length; j++) {
       var eId = regData[j][rMaSuKien];
       if (eId && eventMap[eId]) {
         result.registrations[eId].push({
-          ThoiGian: formatDateString(regData[j][rThoiGian]),
-          HoTen: regData[j][rHoTen] || "",
-          SoDienThoai: regData[j][rSoDienThoai] || "",
-          TrangThai: regData[j][rTrangThai] || "",
-          MaBiMat: regData[j][rMaBiMat] || ""
+          ThoiGian: formatDateString(regData[j][rThoiGian]), HoTen: regData[j][rHoTen] || "",
+          SoDienThoai: regData[j][rSoDienThoai] || "", TrangThai: regData[j][rTrangThai] || "", MaBiMat: regData[j][rMaBiMat] || ""
         });
       }
     }
-
     return result;
-  } catch (e) {
-    return { events: [], registrations: {} };
-  }
+  } catch (e) { return { events: [], registrations: {} }; }
 }
 
 function getFeedbackData(spreadsheetId) {
@@ -176,10 +199,8 @@ function getFeedbackData(spreadsheetId) {
       if (!groups[eId]) { groups[eId] = { info: eventsMap[eId] || { name: "Không xác định", date: "Không xác định" }, reviews: [] }; }
       groups[eId].reviews.push({
         time: reviewData[j][revTimeCol] ? reviewData[j][revTimeCol].toString().trim() : "",
-        format: parseFloat(reviewData[j][revFormatCol]) || 0,
-        content: parseFloat(reviewData[j][revContentCol]) || 0,
-        useful: parseFloat(reviewData[j][revUsefulCol]) || 0,
-        comment: reviewData[j][revCommentCol] || ""
+        format: parseFloat(reviewData[j][revFormatCol]) || 0, content: parseFloat(reviewData[j][revContentCol]) || 0,
+        useful: parseFloat(reviewData[j][revUsefulCol]) || 0, comment: reviewData[j][revCommentCol] || ""
       });
     }
     for (var key in eventsMap) { if (!groups[key]) { groups[key] = { info: eventsMap[key], reviews: [] } } }

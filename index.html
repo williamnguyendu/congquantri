@@ -3,30 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CƠ CHẾ BYPASS ĐỂ HIỂN THỊ ẢNH TỪ GOOGLE DRIVE -->
+    <meta name="referrer" content="no-referrer">
+    
     <title>Hệ thống Quản trị - Pride Home</title>
     
-    <!-- THƯ VIỆN BỔ SUNG -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script> <!-- Tạo QR -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> <!-- Chụp Vé -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
         .spinner { border: 3px solid rgba(79, 70, 229, 0.1); border-left-color: #4f46e5; border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         .hidden { display: none !important; }
         
+        .pdf-preview-container::-webkit-scrollbar { width: 8px; }
+        .pdf-preview-container::-webkit-scrollbar-track { background: #f1f5f9; }
+        .pdf-preview-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-        /* Animation Login */
         .login-bg { background: linear-gradient(-45deg, #e0e7ff, #fbcfe8, #bfdbfe, #ddd6fe); background-size: 400% 400%; animation: gradientBG 12s ease infinite; }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         .bg-shape { position: absolute; filter: blur(60px); z-index: 0; opacity: 0.7; animation: floatShape 8s ease-in-out infinite; }
@@ -34,7 +40,6 @@
         .bg-shape-2 { width: 450px; height: 450px; background: #f472b6; bottom: -150px; right: -100px; border-radius: 50%; animation-delay: -4s; }
         @keyframes floatShape { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(40px) scale(1.05); } }
 
-        /* Css cho VÉ ĐIỆN TỬ DỌC */
         .ticket-cut-horizontal { border-top: 2px dashed #e5e7eb; position: relative; }
         .ticket-cut-horizontal::before, .ticket-cut-horizontal::after {
             content: ''; position: absolute; width: 40px; height: 40px; 
@@ -44,7 +49,7 @@
         .ticket-cut-horizontal::after { right: -21px; }
     </style>
 </head>
-<body class="h-screen overflow-hidden flex text-slate-800">
+<body class="h-screen w-full overflow-hidden text-slate-800">
 
     <!-- Login Screen -->
     <div id="loginScreen" class="fixed inset-0 login-bg z-50 flex items-center justify-center p-4 overflow-hidden">
@@ -77,12 +82,14 @@
     </div>
 
     <!-- Dashboard Screen -->
-    <div id="dashboardScreen" class="hidden w-full h-full flex relative">
-        <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 hidden lg:hidden" onclick="toggleSidebar()"></div>
+    <div id="dashboardScreen" class="hidden flex h-full w-full bg-slate-50 relative overflow-hidden">
+        
+        <!-- Overlay cho Mobile -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
         <!-- Sidebar -->
-        <aside id="sidebar" class="w-72 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-30 absolute inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out">
-            <div class="h-20 flex items-center justify-between px-8 border-b border-slate-100">
+        <aside id="sidebar" class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-50 fixed inset-y-0 left-0 lg:static transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out h-full overflow-y-auto">
+            <div class="h-20 flex items-center justify-between px-8 border-b border-slate-100 shrink-0 sticky top-0 bg-white z-10">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold"><i class="fa-solid fa-cube text-sm"></i></div>
                     <h1 class="text-lg font-bold text-slate-900 tracking-tight">Pride Home</h1>
@@ -90,13 +97,18 @@
                 <button class="lg:hidden text-slate-400 hover:text-slate-600 text-xl" onclick="toggleSidebar()"><i class="fa-solid fa-times"></i></button>
             </div>
             
-            <nav class="flex-1 py-6 px-5 overflow-y-auto">
+            <nav class="flex-1 py-6 px-5">
                 <ul class="space-y-1.5 mb-6">
                     <li><button onclick="switchCategory('overview')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="overview"><i class="fa-solid fa-chart-pie w-5 text-center"></i> Tổng quan</button></li>
                     <li><button onclick="switchCategory('statistics')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="statistics"><i class="fa-solid fa-ranking-star w-5 text-center"></i> Thống kê hạng</button></li>
                 </ul>
 
-                <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Check-in, Đánh giá, Vé điện tử</p>
+                <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Quản lý Thành Viên</p>
+                <ul class="space-y-1.5 mb-6">
+                    <li><button onclick="switchCategory('members')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="members"><i class="fa-solid fa-id-card-clip w-5 text-center"></i> Danh sách thành viên</button></li>
+                </ul>
+
+                <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Check-in, Đánh giá, Vé</p>
                 <ul class="space-y-1.5 mb-6">
                     <li><button onclick="switchCategory('checkin')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="checkin"><i class="fa-solid fa-qrcode w-5 text-center"></i> Cổng Check-in</button></li>
                     <li><button onclick="switchCategory('tickets')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="tickets"><i class="fa-solid fa-ticket-simple w-5 text-center"></i> Quản lý Vé điện tử</button></li>
@@ -104,19 +116,20 @@
                 </ul>
 
                 <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Quản lý sự kiện</p>
-                <ul class="space-y-1.5">
+                <ul class="space-y-1.5 pb-6">
                     <li><button onclick="switchCategory('masoi')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="masoi"><i class="fa-solid fa-moon w-5 text-center"></i> Làng Ma Sói</button></li>
                     <li><button onclick="switchCategory('cafe')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="cafe"><i class="fa-solid fa-mug-hot w-5 text-center"></i> Pride Cafe</button></li>
-                    <li><button onclick="switchCategory('event')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="event"><i class="fa-solid fa-calendar-star w-5 text-center"></i> Pride Event</button></li>
+                    <li><button onclick="switchCategory('event')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="event"><i class="fa-solid fa-calendar-days w-5 text-center"></i> Pride Event</button></li>
                     <li><button onclick="switchCategory('talk')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="talk"><i class="fa-solid fa-microphone w-5 text-center"></i> Pride Talk</button></li>
                     <li><button onclick="switchCategory('sport')" class="nav-btn w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3" data-cat="sport"><i class="fa-solid fa-medal w-5 text-center"></i> Pride Sport</button></li>
                 </ul>
             </nav>
         </aside>
 
-        <main class="flex-1 flex flex-col h-full bg-slate-50/50 overflow-hidden relative">
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col h-full w-full relative overflow-hidden">
             
-            <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center justify-between px-4 lg:px-8 shrink-0 z-10 sticky top-0">
+            <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center justify-between px-4 lg:px-8 shrink-0 z-20 sticky top-0 w-full">
                 <div class="flex items-center gap-4">
                     <button onclick="toggleSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition"><i class="fa-solid fa-bars"></i></button>
                     <h2 id="pageTitle" class="text-xl lg:text-2xl font-bold text-slate-900 tracking-tight truncate">Tổng quan hệ thống</h2>
@@ -133,20 +146,20 @@
                 </div>
             </header>
 
-            <div class="flex-1 overflow-auto p-4 lg:p-8 relative">
-                <div id="contentLoader" class="absolute inset-0 bg-slate-50/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center hidden">
+            <main class="flex-1 p-4 lg:p-8 relative overflow-y-auto w-full">
+                <div id="contentLoader" class="absolute inset-0 bg-slate-50/80 backdrop-blur-sm z-30 flex flex-col items-center justify-center hidden">
                     <div class="spinner mb-4"></div>
                     <p class="text-sm text-slate-500 font-semibold tracking-wide mt-3">Đang đồng bộ dữ liệu...</p>
                 </div>
 
                 <!-- 1. OVERVIEW CONTAINER -->
-                <div id="overviewContainer" class="hidden h-full flex-col max-w-7xl mx-auto w-full">
+                <div id="overviewContainer" class="hidden flex-col max-w-7xl mx-auto w-full h-auto">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-6 pb-6" id="overviewGrid"></div>
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 xl:p-8 mb-10 flex-shrink-0">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 xl:p-8 mb-6">
                         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                             <h3 class="text-xl font-extrabold text-slate-800 tracking-tight">Biểu đồ Lượt đăng ký</h3>
                             <div class="relative w-full sm:w-auto">
-                                <select id="chartFilter" onchange="updateChart(this.value)" class="w-full sm:w-auto px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer appearance-none pr-10">
+                                <select id="chartFilter" onchange="updateChart(this.value)" class="w-full sm:w-auto px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition appearance-none pr-10">
                                     <option value="all">Toàn thời gian</option>
                                     <option value="this_month">Tháng này</option>
                                     <option value="last_month">Tháng trước</option>
@@ -159,19 +172,68 @@
                     </div>
                 </div>
 
-                <!-- 2. STATISTICS CONTAINER -->
-                <div id="statisticsContainer" class="hidden h-full flex-col max-w-7xl mx-auto w-full">
-                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col h-full overflow-hidden mb-10">
-                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-5 bg-white">
+                <!-- 2. MEMBERS CONTAINER -->
+                <div id="membersContainer" class="hidden flex-col max-w-7xl mx-auto w-full lg:h-full">
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col min-h-[500px] lg:h-full overflow-hidden mb-6">
+                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-5 bg-white shrink-0">
                             <div class="flex items-center gap-4 w-full sm:w-auto">
-                                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
-                                    <i class="fa-solid fa-trophy text-lg"></i>
+                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-users-rectangle text-lg"></i>
                                 </div>
-                                <div><h3 class="text-base font-bold text-slate-800">Xếp hạng Fan Cứng</h3><p class="text-xs text-slate-500">Dựa trên số lượt đã phê duyệt</p></div>
+                                <div><h3 class="text-base font-bold text-slate-800">Danh sách Thành viên</h3></div>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                                <div class="relative w-full sm:w-48">
+                                    <select id="memberStatusFilter" onchange="filterMembers()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition appearance-none pr-10">
+                                        <option value="all">Tất cả Trạng thái</option>
+                                        <option value="chờ duyệt">Chờ duyệt</option>
+                                        <option value="đang hoạt động">Đang hoạt động</option>
+                                        <option value="ngừng hoạt động">Ngừng hoạt động</option>
+                                        <option value="bị cấm">Bị cấm</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down absolute right-4 top-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                                </div>
+                                <div class="relative w-full sm:w-64">
+                                    <i class="fa-solid fa-search absolute left-4 top-3 text-slate-400"></i>
+                                    <input type="text" id="searchMemberInput" placeholder="Tìm tên, SĐT, Mã..." onkeyup="filterMembers()" class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-x-auto overflow-y-auto bg-white p-0 relative">
+                            <table class="w-full text-left border-collapse min-w-[900px]" id="membersTable">
+                                <thead class="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
+                                    <tr class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                        <th class="py-4 px-6 border-b border-slate-200">STT</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Mã Số</th>
+                                        <th class="py-4 px-6 border-b border-slate-200 text-center w-24">Hình ảnh</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Họ và Tên</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Số Điện Thoại</th>
+                                        <th class="py-4 px-6 border-b border-slate-200">Năm Sinh</th>
+                                        <th class="py-4 px-6 border-b border-slate-200 text-center">Trạng Thái</th>
+                                        <th class="py-4 px-6 border-b border-slate-200 text-center">Hồ sơ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="membersTableBody" class="text-sm"></tbody>
+                            </table>
+                            <div id="membersEmptyState" class="hidden flex flex-col items-center justify-center p-20 text-slate-400">
+                                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4"><i class="fa-solid fa-user-slash text-3xl text-slate-300"></i></div>
+                                <p class="text-base font-semibold text-slate-600 text-center">Không tìm thấy thành viên nào</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. STATISTICS CONTAINER -->
+                <div id="statisticsContainer" class="hidden flex-col max-w-7xl mx-auto w-full lg:h-full">
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col min-h-[500px] lg:h-full overflow-hidden mb-6">
+                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-5 bg-white shrink-0">
+                            <div class="flex items-center gap-4 w-full sm:w-auto">
+                                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0"><i class="fa-solid fa-trophy text-lg"></i></div>
+                                <div><h3 class="text-base font-bold text-slate-800">Xếp hạng Fan Cứng</h3><p class="text-xs text-slate-500">Dựa trên lượt đã phê duyệt</p></div>
                             </div>
                             <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                                 <div class="relative w-full sm:w-56">
-                                    <select id="statTimeFilter" onchange="renderStatistics()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer appearance-none pr-10">
+                                    <select id="statTimeFilter" onchange="renderStatistics()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition appearance-none pr-10">
                                         <option value="all">Toàn thời gian</option>
                                         <option value="this_month">Tháng này</option>
                                         <option value="last_month">Tháng trước</option>
@@ -187,7 +249,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex-1 overflow-x-auto bg-white p-0 relative">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto bg-white p-0 relative">
                             <table class="w-full text-left border-collapse min-w-[600px]" id="statTable">
                                 <thead class="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
                                     <tr class="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -208,26 +270,23 @@
                     </div>
                 </div>
 
-                <!-- 3. QUẢN LÝ VÉ ĐIỆN TỬ -->
-                <div id="ticketsContainer" class="hidden h-full flex-col max-w-7xl mx-auto w-full">
-                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col h-full overflow-hidden mb-10">
-                        
-                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-5 bg-white">
+                <!-- 4. QUẢN LÝ VÉ ĐIỆN TỬ -->
+                <div id="ticketsContainer" class="hidden flex-col max-w-7xl mx-auto w-full lg:h-full">
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col min-h-[500px] lg:h-full overflow-hidden mb-6">
+                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-5 bg-white shrink-0">
                             <div class="flex items-center gap-4 w-full sm:w-auto">
                                 <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                                     <i class="fa-solid fa-ticket-simple text-lg"></i>
                                 </div>
                                 <div><h3 class="text-base font-bold text-slate-800">Danh sách Sự kiện cấp vé</h3></div>
                             </div>
-                            
-                            <div class="flex items-center gap-4 shrink-0">
+                            <div class="flex items-center gap-4 shrink-0 w-full sm:w-auto justify-end">
                                 <div class="text-sm text-slate-500 font-medium bg-slate-50 px-4 py-2 rounded-xl border border-slate-100" id="tkPageInfo">1 / 1</div>
                                 <button id="btnTkPrev" onclick="changeTicketPage(-1)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition disabled:opacity-30"><i class="fa-solid fa-chevron-left"></i></button>
                                 <button id="btnTkNext" onclick="changeTicketPage(1)" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition disabled:opacity-30"><i class="fa-solid fa-chevron-right"></i></button>
                             </div>
                         </div>
-
-                        <div class="flex-1 overflow-x-auto bg-white p-0 relative">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto bg-white p-0 relative">
                             <table class="w-full text-left border-collapse min-w-[700px]">
                                 <thead class="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
                                     <tr class="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -248,9 +307,9 @@
                     </div>
                 </div>
 
-                <!-- 4. CHECKIN CONTAINER -->
-                <div id="checkinContainer" class="hidden h-full flex-col max-w-7xl mx-auto w-full">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6">
+                <!-- 5. CHECKIN CONTAINER -->
+                <div id="checkinContainer" class="hidden flex-col max-w-7xl mx-auto w-full lg:h-full">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 shrink-0">
                         <div class="bg-white rounded-2xl p-6 border border-slate-200 flex items-center gap-5 shadow-sm">
                             <div class="w-14 h-14 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl"><i class="fa-solid fa-users"></i></div>
                             <div><p class="text-xs font-bold text-slate-400 uppercase">Tổng đăng ký</p><p class="text-3xl font-black text-slate-800" id="checkinTotal">0</p></div>
@@ -264,13 +323,13 @@
                             <div><p class="text-xs font-bold text-slate-400 uppercase">Chưa Check-in</p><p class="text-3xl font-black text-slate-600" id="checkinPending">0</p></div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col h-full overflow-hidden mb-10">
-                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-5 bg-white">
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col min-h-[400px] lg:h-full overflow-hidden mb-6">
+                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-5 bg-white shrink-0">
                             <div class="flex-1 w-full flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-qrcode text-lg"></i></div>
                                 <div class="flex-1 max-w-xs">
                                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Sự kiện mở Check-in</label>
-                                    <select id="checkinEventSelector" onchange="renderCheckinTable()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer appearance-none pr-10"></select>
+                                    <select id="checkinEventSelector" onchange="renderCheckinTable()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition appearance-none pr-10"></select>
                                 </div>
                             </div>
                             <div class="relative w-full sm:w-64">
@@ -278,7 +337,7 @@
                                 <input type="text" id="searchCheckinInput" placeholder="Tìm tên, SĐT, Mã..." onkeyup="searchCheckinTable()" class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
                             </div>
                         </div>
-                        <div class="flex-1 overflow-x-auto bg-white p-0 relative">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto bg-white p-0 relative">
                             <table class="w-full text-left border-collapse min-w-[800px]" id="checkinTable">
                                 <thead class="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
                                     <tr class="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -300,15 +359,15 @@
                     </div>
                 </div>
 
-                <!-- 5. FEEDBACK CONTAINER -->
-                <div id="feedbackContainer" class="hidden h-full flex-col max-w-7xl mx-auto w-full">
-                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 p-5 lg:p-6 mb-6">
+                <!-- 6. FEEDBACK CONTAINER -->
+                <div id="feedbackContainer" class="hidden flex-col max-w-7xl mx-auto w-full lg:h-full">
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 p-5 lg:p-6 mb-6 shrink-0">
                         <div class="flex flex-col xl:flex-row justify-between items-center gap-5">
                             <div class="flex-1 w-full flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-star-half-stroke text-lg"></i></div>
                                 <div class="flex-1">
                                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Chọn Sự kiện để xem Đánh giá</label>
-                                    <select id="feedbackEventSelector" onchange="renderFeedbackTable()" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer appearance-none"></select>
+                                    <select id="feedbackEventSelector" onchange="renderFeedbackTable()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition appearance-none"></select>
                                 </div>
                             </div>
                             <div class="w-full xl:w-auto mt-2 xl:mt-0 flex">
@@ -319,7 +378,7 @@
                         </div>
                     </div>
 
-                    <div id="feedbackStatsSection" class="hidden flex-col md:flex-row gap-6 mb-6">
+                    <div id="feedbackStatsSection" class="hidden flex-col md:flex-row gap-6 mb-6 shrink-0">
                         <div class="grid grid-cols-2 lg:grid-cols-2 gap-4 flex-1">
                             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center items-center text-center">
                                 <p class="text-xs font-bold text-slate-400 uppercase mb-1">Tổng đánh giá</p>
@@ -343,8 +402,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col flex-1 overflow-hidden mb-10">
-                        <div class="flex-1 overflow-x-auto bg-white p-0 relative">
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col min-h-[400px] lg:h-full overflow-hidden mb-10">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto bg-white p-0 relative">
                             <table class="w-full text-left border-collapse min-w-[800px]" id="feedbackTable">
                                 <thead class="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
                                     <tr class="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -367,17 +426,17 @@
                     </div>
                 </div>
 
-                <!-- 6. NORMAL EVENTS DATA CONTAINER -->
-                <div id="dataContainer" class="hidden h-full flex-col max-w-7xl mx-auto w-full">
-                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col h-full overflow-hidden mb-10">
-                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-center gap-5 bg-white">
+                <!-- 7. NORMAL EVENTS DATA CONTAINER -->
+                <div id="dataContainer" class="hidden flex-col max-w-7xl mx-auto w-full lg:h-full">
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200 flex flex-col min-h-[500px] lg:h-full overflow-hidden mb-10">
+                        <div class="p-5 lg:p-6 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-center gap-5 bg-white shrink-0">
                             <div class="w-full flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                                     <i class="fa-regular fa-calendar-check text-lg"></i>
                                 </div>
                                 <div class="flex-1 max-w-xs">
                                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Chọn ngày sự kiện</label>
-                                    <select id="eventDateSelector" onchange="renderTableForSelectedDate()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer appearance-none"></select>
+                                    <select id="eventDateSelector" onchange="renderTableForSelectedDate()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition appearance-none"></select>
                                 </div>
                             </div>
                             <div class="flex flex-col md:flex-row gap-4 w-full xl:w-auto">
@@ -391,7 +450,7 @@
                             </div>
                         </div>
 
-                        <div class="flex-1 overflow-x-auto bg-white p-0 relative">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto bg-white p-0 relative">
                             <table class="w-full text-left border-collapse min-w-[700px]" id="mainTable">
                                 <thead class="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
                                     <tr class="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -411,13 +470,58 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 
     <!-- MODALS -->
+
+    <!-- Profile Member Modal -->
+    <div id="memberProfileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4 lg:p-6">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden border border-slate-200 max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10 shrink-0">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2.5"><i class="fa-solid fa-id-badge text-indigo-500"></i> Hồ sơ Thành viên</h3>
+                <button onclick="closeMemberProfile()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition"><i class="fa-solid fa-times"></i></button>
+            </div>
+            
+            <div class="p-6 bg-slate-50 flex-1 overflow-y-auto">
+                <div class="flex flex-col md:flex-row gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center w-full md:w-1/3 shrink-0">
+                        <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md mb-4 bg-slate-100 flex items-center justify-center">
+                            <img id="mpAvatar" src="" alt="Avatar" class="w-full h-full object-cover hidden" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
+                            <i class="fa-solid fa-user text-3xl text-slate-300"></i>
+                        </div>
+                        <h2 id="mpTen" class="text-xl font-bold text-slate-800 leading-tight"></h2>
+                        <p id="mpBietDanh" class="text-sm font-medium text-slate-500 mt-1 italic"></p>
+                        <div class="mt-4" id="mpTrangThaiBadge"></div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex-1">
+                        <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Thông tin cá nhân</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
+                            <div><p class="text-xs text-slate-400 mb-1">Mã Số</p><p class="text-sm font-bold text-slate-800 font-mono" id="mpMaSo"></p></div>
+                            <div><p class="text-xs text-slate-400 mb-1">Số điện thoại</p><p class="text-sm font-bold text-indigo-600 font-mono" id="mpSDT"></p></div>
+                            <div><p class="text-xs text-slate-400 mb-1">Năm sinh</p><p class="text-sm font-medium text-slate-800" id="mpNamSinh"></p></div>
+                            <div><p class="text-xs text-slate-400 mb-1">Tỉnh/Thành</p><p class="text-sm font-medium text-slate-800" id="mpTinhThanh"></p></div>
+                            <div><p class="text-xs text-slate-400 mb-1">Ngày đăng ký</p><p class="text-sm font-medium text-slate-800" id="mpThoiGian"></p></div>
+                            <div><p class="text-xs text-slate-400 mb-1">Nguồn đăng ký</p><p class="text-sm font-medium text-slate-800" id="mpNguon"></p></div>
+                            <div class="sm:col-span-2"><p class="text-xs text-slate-400 mb-1">Mong muốn tham gia</p><p class="text-sm font-medium text-slate-800 leading-relaxed" id="mpMongMuon"></p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-end mb-4 border-b border-slate-100 pb-2">
+                        <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Lịch sử hoạt động</h4>
+                        <p class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Tổng: <span id="mpCount">0</span> lượt</p>
+                    </div>
+                    <div class="max-h-[250px] overflow-y-auto pr-2 space-y-2" id="mpActivityList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    <!-- Modal Xem Danh Sách Cấp Vé Của 1 Sự Kiện -->
+    <!-- Modal DS Đăng ký của 1 Sự Kiện Vé -->
     <div id="modalRegistrationsTicket" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-white shrink-0">
@@ -444,18 +548,15 @@
         </div>
     </div>
 
-    <!-- MODAL VÉ ĐIỆN TỬ CAO CẤP (KHỔ DỌC) -->
+    <!-- MODAL VÉ ĐIỆN TỬ -->
     <div id="modalTicketDisplay" class="fixed inset-0 bg-slate-900/90 z-[70] hidden flex-col items-center justify-start p-4 py-10 backdrop-blur-sm overflow-y-auto">
         <div class="my-auto flex flex-col items-center justify-center w-full">
             <div id="ticket-frame" class="w-[420px] max-w-full flex flex-col rounded-[24px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative text-white bg-white">
-                
                 <div class="bg-gradient-to-br from-[#4f46e5] via-[#3b82f6] to-[#ec4899] p-8 pb-10 flex flex-col relative z-10 text-center">
                     <div class="absolute top-0 right-0 bg-[#f59e0b] text-white text-[10px] font-black px-4 py-2 rounded-bl-xl shadow-md uppercase tracking-widest">
                         VÉ ĐIỆN TỬ
                     </div>
-                    
                     <h1 id="ticket-eventName" class="text-2xl font-bold uppercase mt-6 mb-6 text-white leading-snug drop-shadow-md"></h1>
-                    
                     <div class="bg-white/20 backdrop-blur-md p-5 rounded-2xl border border-white/30 shadow-sm mb-6 flex flex-col gap-4">
                         <div>
                             <p class="text-[11px] text-blue-100 uppercase tracking-widest mb-1 font-medium">Khách mời</p>
@@ -467,7 +568,6 @@
                             <p id="ticket-secret" class="text-3xl font-bold text-white font-mono tracking-widest drop-shadow"></p>
                         </div>
                     </div>
-
                     <div class="flex flex-col gap-3 text-left">
                         <div class="flex items-center gap-4 bg-white/10 p-3.5 rounded-xl border border-white/10">
                             <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0"><i class="fa-regular fa-clock text-lg text-white"></i></div>
@@ -485,20 +585,15 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="bg-white ticket-cut-horizontal flex flex-col items-center p-8 pt-10 relative z-10 text-slate-800">
                     <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4 text-center">Quét mã tham gia</p>
-                    
                     <div class="bg-white p-3.5 rounded-2xl border-[3px] border-slate-100 shadow-lg">
                         <img id="ticket-qr-img" class="w-[240px] h-[240px] object-contain rounded-lg" src="" alt="Mã QR Vé" />
                     </div>
-
                     <div class="w-full mt-8 pt-6 border-t border-slate-100 text-left">
                         <p class="text-[11px] font-bold text-slate-800 mb-2 uppercase tracking-wider"><i class="fa-solid fa-circle-exclamation text-indigo-500 mr-1.5 text-sm"></i> Điều khoản & Lưu ý:</p>
-                        <ul id="ticket-notes" class="list-disc list-inside text-[13px] text-slate-600 space-y-1.5 font-medium">
-                        </ul>
+                        <ul id="ticket-notes" class="list-disc list-inside text-[13px] text-slate-600 space-y-1.5 font-medium"></ul>
                     </div>
-                    
                     <div class="w-full mt-6 pt-4 border-t border-slate-100 text-center">
                         <p class="text-[11px] font-semibold text-slate-800 mb-1"><i class="fa-solid fa-headset text-indigo-500 mr-1"></i> Hotline: <span class="font-bold font-mono">0987.500.533</span></p>
                         <p class="text-[10px] font-black text-indigo-600 mt-2 tracking-widest uppercase">PRIDE HOME</p>
@@ -506,7 +601,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="mt-8 flex gap-4 z-10">
                 <button id="btn-copy" onclick="copyTicketToClipboard()" class="bg-indigo-600 text-white font-bold px-8 py-3.5 rounded-full shadow-lg transition hover:bg-indigo-700 flex items-center tracking-wide">
                     <i class="fa-regular fa-copy mr-2 text-lg"></i> Lưu ảnh vé (Dán Zalo)
@@ -518,8 +612,7 @@
         </div>
     </div>
 
-
-    <!-- User Detail Modal -->
+    <!-- User Detail Modal (Lịch sử Đơn giản) -->
     <div id="userDetailModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4 lg:p-6">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden border border-slate-200">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
@@ -563,8 +656,21 @@
 
     <script>
         // DÁN URL APP SCRIPT VÀO ĐÂY !!!
-        const API_URL = "https://script.google.com/macros/s/AKfycbx0TA0UOPWp0ClQ3ysANTRJt8mah0-_DNAupuGZtWJ9qWtbnMsyDDrpkoLbhAj71y3C/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbyEefqyM1TYQZerHE5vfSqPdAwPl57K8NedEUhKMmswAZxLqghDxlfRHjE15oim9Uy7/exec"; 
         
+        // HÀM CHUẨN HOÁ LINK ẢNH GOOGLE DRIVE ĐỂ BYPASS LỖI CORS 403 (Không được xoá)
+        function parseDriveImage(url) {
+            if (!url) return '';
+            let str = url.toString().trim();
+            let id = '';
+            let match1 = str.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            let match2 = str.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (match1) id = match1[1];
+            else if (match2) id = match2[1];
+            if (id) return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w500'; 
+            return str;
+        }
+
         let globalData = {};
         let currentCategory = '';
         let currentEventId = '';
@@ -573,7 +679,6 @@
         let feedbackRadarChart = null;
         let currentPdfType = 'checkinlist';
         
-        // Quản lý Vé
         let currentTicketPage = 1;
         const TICKET_ITEMS_PER_PAGE = 30;
         let currentTicketEvent = null;
@@ -675,6 +780,17 @@
                     globalData = res.data;
                     for (let cat in globalData) {
                         if (cat === 'feedback' || cat === 'tickets') continue;
+                        if (cat === 'members') {
+                            globalData[cat].forEach(m => {
+                                if (m.sdt) {
+                                    let pStr = String(m.sdt).trim();
+                                    if (pStr.length === 9 && !pStr.startsWith('0')) pStr = '0' + pStr;
+                                    m.sdt = pStr;
+                                }
+                            });
+                            continue;
+                        }
+                        
                         for (let eventId in globalData[cat]) {
                             globalData[cat][eventId].participants.forEach(p => {
                                 if (p.phone) {
@@ -693,7 +809,7 @@
                     }
                 }
             } catch (error) {
-                alert("Lỗi tải dữ liệu. Vui lòng tải lại trang.");
+                alert("Lỗi tải dữ liệu. Vui lòng thử lại sau.");
             }
             
             loader.classList.add('hidden');
@@ -715,7 +831,7 @@
                 document.getElementById('pageTitle').innerText = activeBtn.innerText.trim();
             }
 
-            const containers = ['overviewContainer', 'statisticsContainer', 'dataContainer', 'checkinContainer', 'feedbackContainer', 'ticketsContainer'];
+            const containers = ['overviewContainer', 'statisticsContainer', 'dataContainer', 'checkinContainer', 'feedbackContainer', 'ticketsContainer', 'membersContainer'];
             containers.forEach(id => {
                 document.getElementById(id).classList.add('hidden');
                 document.getElementById(id).classList.remove('flex');
@@ -725,6 +841,12 @@
                 document.getElementById('overviewContainer').classList.remove('hidden');
                 document.getElementById('overviewContainer').classList.add('flex');
                 renderOverview();
+            } else if (catKey === 'members') {
+                document.getElementById('membersContainer').classList.remove('hidden');
+                document.getElementById('membersContainer').classList.add('flex');
+                document.getElementById('searchMemberInput').value = '';
+                document.getElementById('memberStatusFilter').value = 'all';
+                renderMembersTable();
             } else if (catKey === 'statistics') {
                 document.getElementById('statisticsContainer').classList.remove('hidden');
                 document.getElementById('statisticsContainer').classList.add('flex');
@@ -763,9 +885,11 @@
             } else if (catKey === 'feedback') {
                 document.getElementById('feedbackContainer').classList.remove('hidden');
                 document.getElementById('feedbackContainer').classList.add('flex');
+                
                 const selector = document.getElementById('feedbackEventSelector');
                 selector.innerHTML = '';
                 const fbData = globalData['feedback'] || {};
+                
                 if (Object.keys(fbData).length === 0) {
                     selector.innerHTML = '<option value="">Không có dữ liệu đánh giá</option>';
                     selector.disabled = true;
@@ -817,7 +941,157 @@
         }
 
         // ============================
-        // QUẢN LÝ VÉ ĐIỆN TỬ
+        // 1. QUẢN LÝ THÀNH VIÊN
+        // ============================
+        function renderMembersTable() {
+            const tbody = document.getElementById('membersTableBody');
+            const emptyState = document.getElementById('membersEmptyState');
+            const table = document.getElementById('membersTable');
+            tbody.innerHTML = '';
+
+            const members = globalData['members'] || [];
+            if (members.length === 0) {
+                table.parentElement.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            table.parentElement.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            members.forEach((m, idx) => {
+                let badgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                const st = m.trangThai.toLowerCase().trim();
+                if (st === 'đang hoạt động') badgeClass = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                else if (st === 'chờ duyệt') badgeClass = 'bg-amber-100 text-amber-700 border-amber-200';
+                else if (st === 'bị cấm') badgeClass = 'bg-rose-100 text-rose-700 border-rose-200';
+
+                const processedAvatar = parseDriveImage(m.hinhAnh);
+                const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(m.ten)}&background=random`;
+                const avatarSrc = processedAvatar ? processedAvatar : fallbackAvatar;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-indigo-50/30 border-b border-slate-100 transition-colors member-search-row" data-status="${st}">
+                        <td class="py-4 px-6 font-semibold text-slate-500 w-16 text-center">${idx + 1}</td>
+                        <td class="py-4 px-6 font-mono text-slate-500 font-bold">${m.maSo || '-'}</td>
+                        <td class="py-4 px-6 text-center w-24">
+                            <img src="${avatarSrc}" onerror="this.onerror=null; this.src='${fallbackAvatar}'" class="w-10 h-10 rounded-full object-cover shadow-sm border border-slate-200 mx-auto" />
+                        </td>
+                        <td class="py-4 px-6 font-bold text-slate-800 member-search-name">${m.ten}</td>
+                        <td class="py-4 px-6 font-mono text-slate-600 member-search-phone tracking-wide">${m.sdt}</td>
+                        <td class="py-4 px-6 text-slate-600 font-medium">${m.namSinh || '-'}</td>
+                        <td class="py-4 px-6 text-center">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border ${badgeClass}">${m.trangThai || 'Chưa rõ'}</span>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <button onclick='viewMemberProfile(${JSON.stringify(m).replace(/'/g, "&#39;")})' class="px-4 py-1.5 bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 mx-auto">
+                                <i class="fa-solid fa-address-card"></i> Chi tiết
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            filterMembers();
+        }
+
+        function filterMembers() {
+            const textFilter = document.getElementById('searchMemberInput').value.toLowerCase();
+            const statusFilter = document.getElementById('memberStatusFilter').value.toLowerCase();
+            const rows = document.getElementById('membersTableBody').getElementsByClassName('member-search-row');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const name = rows[i].querySelector('.member-search-name').textContent.toLowerCase();
+                const phone = rows[i].querySelector('.member-search-phone').textContent.toLowerCase();
+                const status = rows[i].getAttribute('data-status');
+                
+                const matchesText = name.includes(textFilter) || phone.includes(textFilter);
+                const matchesStatus = statusFilter === 'all' || status === statusFilter;
+                
+                rows[i].style.display = (matchesText && matchesStatus) ? "" : "none";
+            }
+        }
+
+        function viewMemberProfile(m) {
+            document.getElementById('mpMaSo').innerText = m.maSo || '-';
+            document.getElementById('mpTen').innerText = m.ten || 'Chưa cập nhật';
+            document.getElementById('mpBietDanh').innerText = m.bietDanh ? `"${m.bietDanh}"` : '';
+            document.getElementById('mpSDT').innerText = m.sdt || '-';
+            document.getElementById('mpNamSinh').innerText = m.namSinh || '-';
+            document.getElementById('mpTinhThanh').innerText = m.tinhThanh || '-';
+            document.getElementById('mpThoiGian').innerText = m.thoiGian || '-';
+            document.getElementById('mpNguon').innerText = m.nguon || '-';
+            document.getElementById('mpMongMuon').innerText = m.mongMuon || 'Không có';
+
+            let badgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
+            const st = m.trangThai.toLowerCase().trim();
+            if (st === 'đang hoạt động') badgeClass = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+            else if (st === 'chờ duyệt') badgeClass = 'bg-amber-100 text-amber-700 border-amber-200';
+            else if (st === 'bị cấm') badgeClass = 'bg-rose-100 text-rose-700 border-rose-200';
+            document.getElementById('mpTrangThaiBadge').innerHTML = `<span class="px-4 py-1.5 rounded-full text-xs font-bold border shadow-sm ${badgeClass}">${m.trangThai || 'Chưa rõ'}</span>`;
+
+            const imgEl = document.getElementById('mpAvatar');
+            const processedAvatar = parseDriveImage(m.hinhAnh);
+            const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(m.ten)}&background=random`;
+
+            if(processedAvatar) {
+                imgEl.src = processedAvatar;
+                imgEl.onerror = function() { this.onerror = null; this.src = fallbackAvatar; };
+                imgEl.classList.remove('hidden');
+                imgEl.nextElementSibling.classList.add('hidden');
+            } else {
+                imgEl.classList.add('hidden');
+                imgEl.nextElementSibling.classList.remove('hidden');
+            }
+
+            const catNames = { 'masoi': 'Làng Ma Sói', 'cafe': 'Pride Cafe', 'event': 'Pride Event', 'talk': 'Pride Talk', 'sport': 'Pride Sport' };
+            let activities = [];
+            for (let cat in globalData) {
+                if (cat === 'feedback' || cat === 'tickets' || cat === 'members') continue;
+                for (let eventId in globalData[cat]) {
+                    const group = globalData[cat][eventId];
+                    const eventDate = parseDate(group.info.date);
+                    
+                    group.participants.forEach(p => {
+                        const isApproved = p.status.toLowerCase().includes('duyệt') || p.status.toLowerCase().includes('thành công');
+                        if (isApproved && String(p.phone) === String(m.sdt)) {
+                            activities.push({ dateStr: group.info.date, dateObj: eventDate, type: catNames[cat] });
+                        }
+                    });
+                }
+            }
+
+            activities.sort((a, b) => b.dateObj - a.dateObj);
+            document.getElementById('mpCount').innerText = activities.length;
+            
+            const listEl = document.getElementById('mpActivityList');
+            listEl.innerHTML = '';
+            
+            if(activities.length === 0) {
+                 listEl.innerHTML = '<div class="p-6 text-center text-sm text-slate-500 font-medium border border-dashed border-slate-200 rounded-xl">Chưa tham gia hoạt động nào</div>';
+            } else {
+                 activities.forEach((act) => {
+                     listEl.innerHTML += `
+                        <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-xl flex justify-between items-center hover:bg-indigo-50 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-white text-indigo-500 flex items-center justify-center shrink-0 shadow-sm"><i class="fa-solid fa-check text-xs"></i></div>
+                                <div>
+                                    <p class="font-bold text-slate-700 text-sm">${act.type}</p>
+                                    <p class="text-xs text-slate-500 mt-0.5 font-medium"><i class="fa-regular fa-calendar mr-1"></i> ${act.dateStr}</p>
+                                </div>
+                            </div>
+                        </div>
+                     `;
+                 });
+            }
+
+            document.getElementById('memberProfileModal').classList.remove('hidden');
+        }
+
+        function closeMemberProfile() { document.getElementById('memberProfileModal').classList.add('hidden'); }
+
+
+        // ============================
+        // 2. QUẢN LÝ VÉ ĐIỆN TỬ
         // ============================
         function renderTicketsEvents() {
             const tbody = document.getElementById('ticketsEventBody');
@@ -825,18 +1099,13 @@
             tbody.innerHTML = '';
 
             const ticketsData = globalData['tickets'] || { events: [] };
-            
-            // Sắp xếp sự kiện theo ngày mới nhất lên trên
             let sortedEvents = ticketsData.events.slice().sort((a, b) => parseDate(b.NgayToChuc) - parseDate(a.NgayToChuc));
 
             if (sortedEvents.length === 0) {
-                tbody.parentElement.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                return;
+                tbody.parentElement.classList.add('hidden'); emptyState.classList.remove('hidden'); return;
             }
 
-            tbody.parentElement.classList.remove('hidden');
-            emptyState.classList.add('hidden');
+            tbody.parentElement.classList.remove('hidden'); emptyState.classList.add('hidden');
 
             const start = (currentTicketPage - 1) * TICKET_ITEMS_PER_PAGE;
             const end = start + TICKET_ITEMS_PER_PAGE;
@@ -860,10 +1129,7 @@
             document.getElementById('btnTkNext').disabled = currentTicketPage === totalPages;
         }
 
-        function changeTicketPage(delta) {
-            currentTicketPage += delta;
-            renderTicketsEvents();
-        }
+        function changeTicketPage(delta) { currentTicketPage += delta; renderTicketsEvents(); }
 
         function openRegistrationsTicket(eventObj) {
             currentTicketEvent = eventObj;
@@ -871,7 +1137,6 @@
             
             const tbody = document.getElementById('regsTicketBody');
             tbody.innerHTML = '';
-
             const ticketsData = globalData['tickets'] || { registrations: {} };
             const regs = ticketsData.registrations[eventObj.MaDangKySuKien] || [];
 
@@ -881,7 +1146,6 @@
                     const statusHtml = isApproved 
                         ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[11px] font-bold border border-emerald-200">Đã duyệt</span>`
                         : `<span class="bg-amber-100 text-amber-600 px-3 py-1 rounded-full text-[11px] font-bold border border-amber-200">Chưa duyệt</span>`;
-
                     const btnHtml = isApproved 
                         ? `<button onclick='previewTicket(${JSON.stringify(reg).replace(/'/g, "&#39;")})' class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-1.5 rounded-full shadow-sm transition-colors text-xs flex items-center justify-center gap-1 mx-auto"><i class="fa-solid fa-ticket-simple"></i> Xuất vé</button>` 
                         : `-`;
@@ -902,18 +1166,14 @@
             document.getElementById('modalRegistrationsTicket').classList.remove('hidden');
         }
 
-        function closeRegistrationsTicket() {
-            document.getElementById('modalRegistrationsTicket').classList.add('hidden');
-        }
+        function closeRegistrationsTicket() { document.getElementById('modalRegistrationsTicket').classList.add('hidden'); }
 
         function previewTicket(regObj) {
             const ev = currentTicketEvent;
-            
             document.getElementById('ticket-eventName').innerText = ev.TenSuKien;
             document.getElementById('ticket-date').innerText = ev.NgayToChuc;
             document.getElementById('ticket-time').innerText = ev.GioToChuc ? ev.GioToChuc : 'Cả ngày';
             document.getElementById('ticket-location').innerText = ev.DiaDiemToChuc;
-            
             document.getElementById('ticket-guestName').innerText = regObj.HoTen;
             document.getElementById('ticket-guestPhone').innerText = regObj.SoDienThoai;
             document.getElementById('ticket-secret').innerText = regObj.MaBiMat || '-';
@@ -922,16 +1182,11 @@
             notesContainer.innerHTML = '';
             if (ev.GhiChuTrenVe) {
                 const notes = ev.GhiChuTrenVe.split(';');
-                notes.forEach(note => {
-                    if (note.trim()) notesContainer.innerHTML += `<li class="mb-1">${note.trim()}</li>`;
-                });
+                notes.forEach(note => { if (note.trim()) notesContainer.innerHTML += `<li class="mb-1">${note.trim()}</li>`; });
             }
 
-            // Dùng QRious render mã QR chất lượng cao
             const textToEncode = regObj.MaBiMat || (regObj.HoTen + regObj.SoDienThoai);
-            const qr = new QRious({
-                value: textToEncode, size: 400, level: 'H', background: 'white', foreground: 'black'
-            });
+            const qr = new QRious({ value: textToEncode, size: 400, level: 'H', background: 'white', foreground: 'black' });
             document.getElementById('ticket-qr-img').src = qr.toDataURL('image/png');
 
             document.getElementById('modalTicketDisplay').classList.remove('hidden');
@@ -947,7 +1202,6 @@
             const ticketElement = document.getElementById('ticket-frame');
             const btnCopy = document.getElementById('btn-copy');
             const originalText = btnCopy.innerHTML;
-            
             btnCopy.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang xử lý...';
             btnCopy.disabled = true;
 
@@ -961,7 +1215,6 @@
                         btnCopy.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Đã sao chép (Dán vào Zalo)';
                         btnCopy.classList.replace('bg-indigo-600', 'bg-emerald-600');
                         btnCopy.classList.replace('hover:bg-indigo-700', 'hover:bg-emerald-700');
-                        
                         setTimeout(() => {
                             btnCopy.innerHTML = originalText;
                             btnCopy.classList.replace('bg-emerald-600', 'bg-indigo-600');
@@ -970,20 +1223,18 @@
                         }, 3000);
                     } catch (err) {
                         alert('Trình duyệt không hỗ trợ tự động copy ảnh.');
-                        btnCopy.innerHTML = originalText;
-                        btnCopy.disabled = false;
+                        btnCopy.innerHTML = originalText; btnCopy.disabled = false;
                     }
                 }, "image/png");
             } catch (err) {
                 alert('Có lỗi xảy ra khi tạo ảnh vé.');
-                btnCopy.innerHTML = originalText;
-                btnCopy.disabled = false;
+                btnCopy.innerHTML = originalText; btnCopy.disabled = false;
             }
         }
 
 
         // ============================
-        // TRANG THỐNG KÊ (LEADERBOARD)
+        // 3. TRANG THỐNG KÊ (LEADERBOARD)
         // ============================
         function renderStatistics() {
             const filter = document.getElementById('statTimeFilter').value;
@@ -1054,7 +1305,6 @@
             statsArray.forEach((item, index) => {
                 const rank = index + 1;
                 let rankHTML = `<span class="font-bold text-slate-500">${rank}</span>`;
-                
                 if (rank === 1) rankHTML = `<div class="w-8 h-8 mx-auto bg-amber-100 text-amber-500 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-trophy"></i></div>`;
                 else if (rank === 2) rankHTML = `<div class="w-8 h-8 mx-auto bg-slate-200 text-slate-500 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-medal"></i></div>`;
                 else if (rank === 3) rankHTML = `<div class="w-8 h-8 mx-auto bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-award"></i></div>`;
@@ -1065,12 +1315,10 @@
                         <td class="py-4 px-6 font-bold text-slate-800 stat-name">${item.name}</td>
                         <td class="py-4 px-6 font-mono text-slate-600 stat-phone tracking-wide">${item.phone}</td>
                         <td class="py-4 px-6 text-center">
-                            <span class="inline-flex items-center justify-center bg-indigo-50 text-indigo-700 font-black px-3 py-1.5 rounded-lg border border-indigo-100 min-w-[3rem]">
-                                ${item.count}
-                            </span>
+                            <span class="inline-flex items-center justify-center bg-indigo-50 text-indigo-700 font-black px-3 py-1.5 rounded-lg border border-indigo-100 min-w-[3rem]">${item.count}</span>
                         </td>
                         <td class="py-4 px-6 text-center">
-                            <button onclick="openUserDetail('${item.phone}')" class="px-4 py-1.5 bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 mx-auto">
+                            <button onclick="openUserDetailHistory('${item.phone}')" class="px-4 py-1.5 bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 mx-auto">
                                 <i class="fa-solid fa-eye"></i> Lịch sử
                             </button>
                         </td>
@@ -1090,10 +1338,11 @@
             }
         }
 
+
         // ============================
-        // POPUP CHI TIẾT NGƯỜI DÙNG
+        // 4. POPUP LỊCH SỬ DÀNH RIÊNG CHO TRANG THỐNG KÊ (ĐƠN GIẢN)
         // ============================
-        function openUserDetail(phoneStr) {
+        function openUserDetailHistory(phoneStr) {
             const catNames = { 'masoi': 'Làng Ma Sói', 'cafe': 'Pride Cafe', 'event': 'Pride Event', 'talk': 'Pride Talk', 'sport': 'Pride Sport' };
             let activities = []; let userName = "";
 
@@ -1103,7 +1352,7 @@
             const currentYear = now.getFullYear();
 
             for (let cat in globalData) {
-                if (cat === 'feedback' || cat === 'tickets') continue;
+                if (cat === 'feedback' || cat === 'tickets' || cat === 'members') continue;
                 for (let eventId in globalData[cat]) {
                     const group = globalData[cat][eventId];
                     const eventDate = parseDate(group.info.date);
@@ -1152,10 +1401,7 @@
                         <div class="p-4 border-b border-slate-100 flex justify-between items-center hover:bg-slate-50 transition ${idx === activities.length -1 ? 'border-0' : ''}">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0"><i class="fa-regular fa-calendar-check text-base"></i></div>
-                                <div>
-                                    <p class="font-bold text-slate-700 text-sm">${act.type}</p>
-                                    <p class="text-xs text-slate-500 mt-1 font-medium"><i class="fa-regular fa-clock mr-1"></i> ${act.dateStr}</p>
-                                </div>
+                                <div><p class="font-bold text-slate-700 text-sm">${act.type}</p><p class="text-xs text-slate-500 mt-1 font-medium"><i class="fa-regular fa-clock mr-1"></i> ${act.dateStr}</p></div>
                             </div>
                         </div>
                      `;
@@ -1166,8 +1412,9 @@
 
         function closeUserDetail() { document.getElementById('userDetailModal').classList.add('hidden'); }
 
+
         // ============================
-        // TRANG TỔNG QUAN & BIỂU ĐỒ
+        // 5. TRANG TỔNG QUAN & BIỂU ĐỒ
         // ============================
         function renderOverview() {
             const grid = document.getElementById('overviewGrid');
@@ -1175,7 +1422,7 @@
             const categories = [
                 { key: 'masoi', name: 'Làng Ma Sói', icon: 'fa-moon', color: 'text-indigo-600', bg: 'bg-indigo-50', dot: 'bg-indigo-600' },
                 { key: 'cafe', name: 'Pride Cafe', icon: 'fa-mug-hot', color: 'text-orange-600', bg: 'bg-orange-50', dot: 'bg-orange-500' },
-                { key: 'event', name: 'Pride Event', icon: 'fa-ticket', color: 'text-rose-600', bg: 'bg-rose-50', dot: 'bg-rose-500' },
+                { key: 'event', name: 'Pride Event', icon: 'fa-calendar-days', color: 'text-rose-600', bg: 'bg-rose-50', dot: 'bg-rose-500' },
                 { key: 'talk', name: 'Pride Talk', icon: 'fa-microphone', color: 'text-sky-600', bg: 'bg-sky-50', dot: 'bg-sky-500' },
                 { key: 'sport', name: 'Pride Sport', icon: 'fa-medal', color: 'text-teal-600', bg: 'bg-teal-50', dot: 'bg-teal-500' }
             ];
@@ -1211,7 +1458,7 @@
                     : `<p class="text-[13px] font-medium text-slate-400 mt-1 italic">Tất cả đã đóng đăng ký</p>`;
 
                 const topUserText = maxCount > 0 
-                    ? `<div class="mt-2 bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center cursor-pointer hover:bg-indigo-50 hover:border-indigo-100 transition" onclick="openUserDetail('${maxPhone}')" title="Nhấn để xem chi tiết">
+                    ? `<div class="mt-2 bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center cursor-pointer hover:bg-indigo-50 hover:border-indigo-100 transition" onclick="openUserDetailHistory('${maxPhone}')" title="Nhấn để xem chi tiết">
                            <div><p class="text-sm font-bold text-slate-800">${maxName}</p><p class="text-xs font-mono text-slate-500 mt-0.5">${maxPhone}</p></div>
                            <div class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg shadow-sm">
                                <span class="${cat.color} font-black text-sm">${maxCount}</span> <span class="text-[10px] text-slate-500 font-bold">LẦN</span>
