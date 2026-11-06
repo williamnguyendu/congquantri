@@ -41,7 +41,6 @@ function checkLogin(username, passwordMd5) {
   return { success: false, message: "Tên đăng nhập hoặc mật khẩu không đúng." };
 }
 
-// Hàm format ngày dùng cho các danh sách đăng ký
 function formatDateString(dateStr) {
   if (!dateStr) return "";
   var str = dateStr.toString().trim();
@@ -53,10 +52,8 @@ function formatDateString(dateStr) {
     var time = match[4];
     
     if (p1 > 12) {
-       // Đã là định dạng Ngày/Tháng/Năm, không đảo
        return match[1].padStart(2, '0') + '/' + match[2].padStart(2, '0') + '/' + year + time;
     } else {
-       // Đảo Tháng/Ngày/Năm thành Ngày/Tháng/Năm
        return match[2].padStart(2, '0') + '/' + match[1].padStart(2, '0') + '/' + year + time;
     }
   }
@@ -69,11 +66,11 @@ function fetchAllData() {
     cafe: getGroupedData("1F6Xo5Xq0WRefvGZMtxk-sqp5yqXTwJ6Gy-bGRVzImms", "DangKyCafe", "LichCafe", "MaSuKienCafe", ["DiaDiem"]),
     event: getGroupedData("1xlGdKp9WZY2J6WcUvkfYrx1GTJHvrdrLvzeFmQPY86o", "DSDKSuKien", "ThongTinSuKien", ["MaSuKienWorkshop", "MaDangKySuKien"], ["TenSuKien"]),
     talk: getGroupedData("1WQKsrBCiY6DrEnLSMq1jxH8fn29t0npvwKq1DdvYb3o", "DangKyPrideTalk", "LichPrideTalk", "MaSuKienTalk", ["TenChuDe"]),
+    sport: getGroupedData("1Mu25JGgxcaKwMZ2iklVcb9wvEVibR4QW-WUIxkQl-ac", "DangKySport", "LichSport", "MaSport", ["TenSport"]),
     feedback: getFeedbackData("18VmspeT4fjVB1DG2ye8FzhkqdHOxgqyL1MYyBjSTEnI")
   };
 }
 
-// Hàm đọc dữ liệu đánh giá: BỎ FORMAT DATE để giữ đúng 100% text hiển thị trên Google Sheets
 function getFeedbackData(spreadsheetId) {
   try {
     var ss = SpreadsheetApp.openById(spreadsheetId);
@@ -103,7 +100,7 @@ function getFeedbackData(spreadsheetId) {
       if (id) {
         eventsMap[id] = {
           name: infoData[i][infoNameCol] ? infoData[i][infoNameCol].toString().trim() : "",
-          date: infoData[i][infoDateCol] ? infoData[i][infoDateCol].toString().trim() : "" // Giữ nguyên bản
+          date: infoData[i][infoDateCol] ? infoData[i][infoDateCol].toString().trim() : "" 
         };
       }
     }
@@ -121,7 +118,7 @@ function getFeedbackData(spreadsheetId) {
       }
       
       groups[eId].reviews.push({
-        time: reviewData[j][revTimeCol] ? reviewData[j][revTimeCol].toString().trim() : "", // Giữ nguyên bản
+        time: reviewData[j][revTimeCol] ? reviewData[j][revTimeCol].toString().trim() : "",
         format: parseFloat(reviewData[j][revFormatCol]) || 0,
         content: parseFloat(reviewData[j][revContentCol]) || 0,
         useful: parseFloat(reviewData[j][revUsefulCol]) || 0,
@@ -137,7 +134,6 @@ function getFeedbackData(spreadsheetId) {
          }
       }
     }
-
     return groups;
   } catch (e) {
     return {};
@@ -145,66 +141,83 @@ function getFeedbackData(spreadsheetId) {
 }
 
 function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys, extraInfoKeys) {
-  var ss = SpreadsheetApp.openById(spreadsheetId);
-  var sheetReg = ss.getSheetByName(sheetRegName);
-  var sheetInfo = ss.getSheetByName(sheetInfoName);
-  
-  var regData = sheetReg.getDataRange().getDisplayValues();
-  var infoData = sheetInfo.getDataRange().getDisplayValues();
-  
-  var infoHeaders = infoData[0];
-  var regHeaders = regData[0];
-  
-  var regEventIdCol = typeof eventIdKeys === 'string' ? regHeaders.indexOf(eventIdKeys) : regHeaders.indexOf(eventIdKeys[0]);
-  var infoEventIdCol = typeof eventIdKeys === 'string' ? infoHeaders.indexOf(eventIdKeys) : infoHeaders.indexOf(eventIdKeys[1]);
-  
-  var infoDateCol = infoHeaders.indexOf("NgayToChuc");
-  var extraInfoCol = infoHeaders.indexOf(extraInfoKeys[0]);
-  var infoStatusCol = infoHeaders.indexOf("TrangThai"); 
-  var infoStatusCheckInCol = infoHeaders.indexOf("TrangThaiCheckIn");
-  
-  var dateCol = regHeaders.indexOf("ThoiGianDangKy") > -1 ? regHeaders.indexOf("ThoiGianDangKy") : regHeaders.indexOf("ThoiGian");
-  var nameCol = regHeaders.indexOf("HoVaTen") > -1 ? regHeaders.indexOf("HoVaTen") : regHeaders.indexOf("HoTen");
-  var phoneCol = regHeaders.indexOf("SoDienThoai");
-  var statusCol = regHeaders.indexOf("TrangThaiPheDuyet") > -1 ? regHeaders.indexOf("TrangThaiPheDuyet") : regHeaders.indexOf("TrangThai");
-  
-  var regMaBiMatCol = regHeaders.indexOf("MaBiMat");
-  var regCheckInCol = regHeaders.indexOf("CheckIn");
-
-  var eventsMap = {};
-  for (var i = 1; i < infoData.length; i++) {
-    var id = infoData[i][infoEventIdCol];
-    if (id) {
-      eventsMap[id] = {
-        date: formatDateString(infoData[i][infoDateCol]),
-        extra: extraInfoCol > -1 ? infoData[i][extraInfoCol] : "",
-        status: infoStatusCol > -1 ? infoData[i][infoStatusCol] : "",
-        statusCheckIn: infoStatusCheckInCol > -1 ? infoData[i][infoStatusCheckInCol] : ""
-      };
-    }
-  }
-
-  var groups = {};
-  for (var j = 1; j < regData.length; j++) {
-    var eId = regData[j][regEventIdCol];
-    if (!eId) continue;
+  try {
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var sheetReg = ss.getSheetByName(sheetRegName);
+    var sheetInfo = ss.getSheetByName(sheetInfoName);
     
-    if (!groups[eId]) {
-      groups[eId] = {
-        info: eventsMap[eId] || { date: "Không xác định", extra: "", status: "", statusCheckIn: "" },
-        participants: []
-      };
+    var regData = sheetReg.getDataRange().getDisplayValues();
+    var infoData = sheetInfo.getDataRange().getDisplayValues();
+    
+    var infoHeaders = infoData[0];
+    var regHeaders = regData[0];
+    
+    var regEventIdCol = typeof eventIdKeys === 'string' ? regHeaders.indexOf(eventIdKeys) : regHeaders.indexOf(eventIdKeys[0]);
+    var infoEventIdCol = typeof eventIdKeys === 'string' ? infoHeaders.indexOf(eventIdKeys) : infoHeaders.indexOf(eventIdKeys[1]);
+    
+    // Fallback nếu người dùng đặt tên cột khoá chính hơi khác (ví dụ MaSuKienSport thay vì MaSport)
+    if(regEventIdCol === -1) {
+      for(var k=0; k<regHeaders.length; k++) {
+        if(regHeaders[k].toLowerCase().indexOf("ma") > -1) { regEventIdCol = k; break; }
+      }
     }
     
-    groups[eId].participants.push({
-      time: formatDateString(regData[j][dateCol]),
-      name: regData[j][nameCol],
-      phone: regData[j][phoneCol],
-      status: regData[j][statusCol],
-      maBiMat: regMaBiMatCol > -1 ? regData[j][regMaBiMatCol] : "",
-      checkIn: regCheckInCol > -1 ? regData[j][regCheckInCol] : ""
-    });
+    var infoDateCol = infoHeaders.indexOf("NgayToChuc");
+    var extraInfoCol = infoHeaders.indexOf(extraInfoKeys[0]);
+    var infoStatusCol = infoHeaders.indexOf("TrangThai"); 
+    var infoStatusCheckInCol = infoHeaders.indexOf("TrangThaiCheckIn");
+    
+    var dateCol = regHeaders.indexOf("ThoiGianDangKy") > -1 ? regHeaders.indexOf("ThoiGianDangKy") : regHeaders.indexOf("ThoiGian");
+    var nameCol = regHeaders.indexOf("HoVaTen") > -1 ? regHeaders.indexOf("HoVaTen") : (regHeaders.indexOf("HoTen") > -1 ? regHeaders.indexOf("HoTen") : regHeaders.indexOf("Tên"));
+    var phoneCol = regHeaders.indexOf("SoDienThoai");
+    var statusCol = regHeaders.indexOf("TrangThaiPheDuyet") > -1 ? regHeaders.indexOf("TrangThaiPheDuyet") : regHeaders.indexOf("TrangThai");
+    
+    var regMaBiMatCol = regHeaders.indexOf("MaBiMat");
+    var regCheckInCol = regHeaders.indexOf("CheckIn");
+
+    var eventsMap = {};
+    for (var i = 1; i < infoData.length; i++) {
+      var id = infoData[i][infoEventIdCol];
+      if (id) {
+        eventsMap[id] = {
+          date: formatDateString(infoData[i][infoDateCol]),
+          extra: extraInfoCol > -1 ? infoData[i][extraInfoCol] : "",
+          status: infoStatusCol > -1 ? infoData[i][infoStatusCol] : "",
+          statusCheckIn: infoStatusCheckInCol > -1 ? infoData[i][infoStatusCheckInCol] : ""
+        };
+      }
+    }
+
+    var groups = {};
+    for (var j = 1; j < regData.length; j++) {
+      var eId = regData[j][regEventIdCol];
+      if (!eId) continue;
+      
+      if (!groups[eId]) {
+        groups[eId] = {
+          info: eventsMap[eId] || { date: "Không xác định", extra: "", status: "", statusCheckIn: "" },
+          participants: []
+        };
+      }
+      
+      // Fix: Nếu Sheet (như Sport) không có cột Trạng thái, tự động gán là "Đã duyệt"
+      var statusVal = "Đã duyệt";
+      if (statusCol > -1 && regData[j][statusCol] !== undefined && regData[j][statusCol].toString().trim() !== "") {
+          statusVal = regData[j][statusCol];
+      }
+
+      groups[eId].participants.push({
+        time: formatDateString(regData[j][dateCol]),
+        name: regData[j][nameCol],
+        phone: regData[j][phoneCol],
+        status: statusVal, 
+        maBiMat: regMaBiMatCol > -1 ? regData[j][regMaBiMatCol] : "",
+        checkIn: regCheckInCol > -1 ? regData[j][regCheckInCol] : ""
+      });
+    }
+    
+    return groups;
+  } catch (e) {
+    return {};
   }
-  
-  return groups;
 }
