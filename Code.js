@@ -62,18 +62,20 @@ function formatDateString(dateStr) {
 
 function fetchAllData() {
   return {
-    masoi: getGroupedData("1-H_mbJpwwLQvzLsjuF2ZG1lQaMlV0eXm0nIkICHphg8", "DangKyLangMaSoi", "LichLangMaSoi", "MaSuKienMaSoi", ["DiaDiem"]),
-    cafe: getGroupedData("1F6Xo5Xq0WRefvGZMtxk-sqp5yqXTwJ6Gy-bGRVzImms", "DangKyCafe", "LichCafe", "MaSuKienCafe", ["DiaDiem"]),
-    event: getGroupedData("1xlGdKp9WZY2J6WcUvkfYrx1GTJHvrdrLvzeFmQPY86o", "DSDKSuKien", "ThongTinSuKien", ["MaSuKienWorkshop", "MaDangKySuKien"], ["TenSuKien"]),
-    talk: getGroupedData("1WQKsrBCiY6DrEnLSMq1jxH8fn29t0npvwKq1DdvYb3o", "DangKyPrideTalk", "LichPrideTalk", "MaSuKienTalk", ["TenChuDe"]),
-    sport: getGroupedData("1Mu25JGgxcaKwMZ2iklVcb9wvEVibR4QW-WUIxkQl-ac", "DangKySport", "LichSport", "MaSport", ["TenSport"]),
+    masoi: getGroupedData("1-H_mbJpwwLQvzLsjuF2ZG1lQaMlV0eXm0nIkICHphg8", "DangKyLangMaSoi", "LichLangMaSoi", "MaSuKienMaSoi", ["DiaDiem"], true), // true = dùng format date
+    cafe: getGroupedData("1F6Xo5Xq0WRefvGZMtxk-sqp5yqXTwJ6Gy-bGRVzImms", "DangKyCafe", "LichCafe", "MaSuKienCafe", ["DiaDiem"], true),
+    event: getGroupedData("1xlGdKp9WZY2J6WcUvkfYrx1GTJHvrdrLvzeFmQPY86o", "DSDKSuKien", "ThongTinSuKien", ["MaSuKienWorkshop", "MaDangKySuKien"], ["TenSuKien"], true),
+    sport: getGroupedData("1Mu25JGgxcaKwMZ2iklVcb9wvEVibR4QW-WUIxkQl-ac", "DangKySport", "LichSport", "MaSport", ["TenSport"], true),
+    
+    // RIÊNG PRIDE TALK KHÔNG FORMAT NGÀY (Lấy nguyên bản Sheet)
+    talk: getGroupedData("1WQKsrBCiY6DrEnLSMq1jxH8fn29t0npvwKq1DdvYb3o", "DangKyPrideTalk", "LichPrideTalk", "MaSuKienTalk", ["TenChuDe"], false),
+    
     feedback: getFeedbackData("18VmspeT4fjVB1DG2ye8FzhkqdHOxgqyL1MYyBjSTEnI"),
     tickets: getTicketData("1xlGdKp9WZY2J6WcUvkfYrx1GTJHvrdrLvzeFmQPY86o"),
-    members: getMembersData("1LLS2iXbgQzg9exlMlKLVZX9wGLqAcOcC2gBViVlqHRk") // API lấy Thành viên
+    members: getMembersData("1LLS2iXbgQzg9exlMlKLVZX9wGLqAcOcC2gBViVlqHRk")
   };
 }
 
-// HÀM MỚI: LẤY DỮ LIỆU THÀNH VIÊN
 function getMembersData(spreadsheetId) {
   try {
     var ss = SpreadsheetApp.openById(spreadsheetId);
@@ -208,7 +210,8 @@ function getFeedbackData(spreadsheetId) {
   } catch (e) { return {}; }
 }
 
-function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys, extraInfoKeys) {
+// Bổ sung tham số useFormatDate = true/false
+function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys, extraInfoKeys, useFormatDate) {
   try {
     var ss = SpreadsheetApp.openById(spreadsheetId);
     var sheetReg = ss.getSheetByName(sheetRegName);
@@ -242,8 +245,11 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
     for (var i = 1; i < infoData.length; i++) {
       var id = infoData[i][infoEventIdCol];
       if (id) {
+        // Tùy theo danh sách có cần format hay không
+        var finalDateInfo = useFormatDate ? formatDateString(infoData[i][infoDateCol]) : (infoData[i][infoDateCol] ? infoData[i][infoDateCol].toString().trim() : "");
+        
         eventsMap[id] = {
-          date: formatDateString(infoData[i][infoDateCol]),
+          date: finalDateInfo,
           extra: extraInfoCol > -1 ? infoData[i][extraInfoCol] : "",
           status: infoStatusCol > -1 ? infoData[i][infoStatusCol] : "",
           statusCheckIn: infoStatusCheckInCol > -1 ? infoData[i][infoStatusCheckInCol] : ""
@@ -262,8 +268,12 @@ function getGroupedData(spreadsheetId, sheetRegName, sheetInfoName, eventIdKeys,
       if (statusCol > -1 && regData[j][statusCol] !== undefined && regData[j][statusCol].toString().trim() !== "") {
           statusVal = regData[j][statusCol];
       }
+      
+      // Tùy theo danh sách có cần format cột Thời gian đăng ký hay không
+      var finalDateReg = useFormatDate ? formatDateString(regData[j][dateCol]) : (regData[j][dateCol] ? regData[j][dateCol].toString().trim() : "");
+
       groups[eId].participants.push({
-        time: formatDateString(regData[j][dateCol]),
+        time: finalDateReg,
         name: regData[j][nameCol], phone: regData[j][phoneCol], status: statusVal, 
         maBiMat: regMaBiMatCol > -1 ? regData[j][regMaBiMatCol] : "",
         checkIn: regCheckInCol > -1 ? regData[j][regCheckInCol] : ""
